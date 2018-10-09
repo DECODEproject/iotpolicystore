@@ -3,13 +3,13 @@ package tasks
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/thingful/go-build-template/pkg/http"
+	"github.com/thingful/iotpolicystore/pkg/http"
 )
 
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
-	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8080", "Specify the address to which the server binds")
+	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8082", "Specify the address to which the server binds")
 }
 
 var serverCmd = &cobra.Command{
