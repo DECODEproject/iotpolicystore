@@ -7,14 +7,29 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
+	kitlog "github.com/go-kit/kit/log"
+	"github.com/thingful/iotpolicystore/pkg/logger"
 )
 
+// Config is a configuration object we pass into our server instance when
+// constructing.
+type Config struct {
+	Addr        string
+	DatabaseURL string
+	Verbose     bool
+}
+
+// Server is our custom server type.
 type Server struct {
-	srv *http.Server
+	srv    *http.Server
+	logger kitlog.Logger
 }
 
 // NewServer returns a new simple HTTP server.
-func NewServer(addr string) *Server {
+func NewServer(config *Config) *Server {
+	logger := logger.NewLogger()
+
 	// create a simple multiplexer
 	mux := http.NewServeMux()
 
@@ -23,13 +38,14 @@ func NewServer(addr string) *Server {
 
 	// create our http.Server instance
 	srv := &http.Server{
-		Addr:    addr,
+		Addr:    config.Addr,
 		Handler: mux,
 	}
 
 	// return the instantiated server
 	return &Server{
-		srv: srv,
+		srv:    srv,
+		logger: logger,
 	}
 }
 
