@@ -44,3 +44,23 @@
 [[constraint]]
   branch = "master"
   name = "github.com/thingful/twirp-policystore-go"
+
+[[constraint]]
+  name = "goji.io"
+  version = "2.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/jmoiron/sqlx"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
+  name = "github.com/golang-migrate/migrate"
+  version = "3.5.1"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/serenize/snaker"
