@@ -10,7 +10,7 @@ export CGO_ENABLED="${CGO_ENABLED:-0}"
 export GOARCH="${ARCH}"
 
 # generate bindata assets
-# go generate -x "${PKG}/pkg/migrations/"
+go generate -x "${PKG}/pkg/migrations/"
 
 go install \
     -v \
