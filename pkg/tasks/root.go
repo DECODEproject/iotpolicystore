@@ -3,6 +3,7 @@ package tasks
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -46,4 +47,6 @@ func init() {
 func initConfig() {
 	viper.SetEnvPrefix("policystore")
 	viper.AutomaticEnv()
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
 }

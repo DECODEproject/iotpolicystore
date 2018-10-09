@@ -6,7 +6,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/thingful/iotpolicystore/pkg/config"
 	"github.com/thingful/iotpolicystore/pkg/http"
+	"github.com/thingful/iotpolicystore/pkg/logger"
 )
 
 var serverCmd = &cobra.Command{
@@ -31,10 +33,11 @@ database.`,
 
 		verbose := viper.GetBool("verbose")
 
-		config := &http.Config{
-			Addr:        addr,
-			DatabaseURL: databaseURL,
-			Verbose:     verbose,
+		config := &config.Config{
+			ServerAddr: addr,
+			ConnStr:    databaseURL,
+			Verbose:    verbose,
+			Logger:     logger.NewLogger(),
 		}
 
 		s := http.NewServer(config)
@@ -48,7 +51,7 @@ database.`,
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
-	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8082", "Specify the address to which the server binds. May also be passed via the environment as $POLICY_STORE_ADDR")
+	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8082", "Specify the address to which the server binds. May also be passed via the environment as $POLICYSTORE_ADDR")
 	serverCmd.Flags().StringP("database-url", "d", "", "The database connection url. May also be passed via the environment as $POLICYSTORE_DATABASE_URL")
 
 	viper.BindPFlag("addr", serverCmd.Flags().Lookup("addr"))
