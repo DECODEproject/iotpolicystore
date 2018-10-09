@@ -5,19 +5,16 @@ import (
 
 	kitlog "github.com/go-kit/kit/log"
 	ps "github.com/thingful/twirp-policystore-go"
-)
 
-// Config is a config object for passing configuration into the rpc policystore
-// instance.
-type Config struct {
-	Logger  kitlog.Logger
-	Verbose bool
-}
+	"github.com/thingful/iotpolicystore/pkg/config"
+	"github.com/thingful/iotpolicystore/pkg/postgres"
+)
 
 // policystore is the type that we use to implement the PolicyStore interface
 type policystore struct {
 	logger  kitlog.Logger
 	verbose bool
+	db      *postgres.DB
 }
 
 // ensure we conform to the interface at compile time
@@ -25,24 +22,27 @@ var _ ps.PolicyStore = &policystore{}
 
 // NewPolicyStore returns a new policy store instance. It is not ready to be
 // used until the Start() method is called on the object.
-func NewPolicyStore(config *Config) ps.PolicyStore {
+func NewPolicyStore(config *config.Config) ps.PolicyStore {
+	db := postgres.NewDB(config)
+
 	logger := kitlog.With(config.Logger, "module", "rpc")
 	logger.Log("msg", "creating policystore rpc server")
 
 	return &policystore{
 		logger:  logger,
 		verbose: config.Verbose,
+		db:      db,
 	}
 }
 
 // Start starts the policystore and any child components running
 func (p *policystore) Start() error {
-	return nil
+	return p.db.Start()
 }
 
 // Stop stops the policystore and any child components from running
 func (p *policystore) Stop() error {
-	return nil
+	return p.db.Stop()
 }
 
 // CreateEntitlementPolicy is our implementation of one of the methods defined
