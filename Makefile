@@ -96,7 +96,7 @@ test: .build-dirs .compose ## Run tests in the containerized environment
 		run \
 		--rm \
 		-u $$(id -u):$$(id -g) \
-		-e "IOTPOLICYSTORE_DATABASE_URL=postgres://policystore:password@postgres/policystore_test?sslmode=disable" \
+		-e "POLICYSTORE_DATABASE_URL=postgres://policystore:password@postgres/policystore_test?sslmode=disable" \
 		app \
 		/bin/sh -c " \
 			./build/test.sh $(SRC_DIRS) \
