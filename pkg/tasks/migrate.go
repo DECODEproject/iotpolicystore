@@ -15,7 +15,7 @@ import (
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Manage Postgres migrations",
-	Long: `This task provides a set of subcommands for working with migrations for our Postgres instance.
+	Long: `This task provides a set of subcommands for working with Postgres migrations.
 
 Up migrations are run automatically when the application boots, but here we
 also add some commands to create properly named migration files, and a
@@ -31,7 +31,7 @@ in the way the migration library requires.
 The desired migration name should be passed via a positional argument after
 the new subcommand. For example:
 
-		$ %s migrate new AddPolicyTable`, version.BinaryName),
+	$ %s migrate new AddPolicyTable`, version.BinaryName),
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir := viper.GetString("dir")
