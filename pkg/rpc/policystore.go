@@ -37,11 +37,15 @@ func NewPolicyStore(config *config.Config) ps.PolicyStore {
 
 // Start starts the policystore and any child components running
 func (p *policystore) Start() error {
+	p.logger.Log("msg", "starting policystore rpc server")
+
 	return p.db.Start()
 }
 
 // Stop stops the policystore and any child components from running
 func (p *policystore) Stop() error {
+	p.logger.Log("msg", "stopping policystore rpc server")
+
 	return p.db.Stop()
 }
 
