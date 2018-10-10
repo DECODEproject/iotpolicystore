@@ -64,3 +64,15 @@
 [[constraint]]
   branch = "master"
   name = "github.com/serenize/snaker"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/lestrrat-go/backoff"
+
+[[constraint]]
+  name = "github.com/speps/go-hashids"
+  version = "2.0.0"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.2.2"
