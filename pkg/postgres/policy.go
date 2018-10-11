@@ -39,18 +39,37 @@ type Operation struct {
 	Interval int       `json:"interval"`
 }
 
-// PolicyRequest is a struct used to represent info about the whole policy. It
+// CreatePolicyRequest is a struct used to represent info about the whole policy. It
 // contains a public key, a label, and a list of operations to be applied to the
 // data if the user applies this policy to their event stream.
-type PolicyRequest struct {
-	PublicKey  string      `db:"public_key"`
-	Label      string      `db:"label"`
-	Operations []Operation `db:"operations"`
+type CreatePolicyRequest struct {
+	PublicKey  string
+	Label      string
+	Operations []Operation
 }
 
-// PolicyResponse is used...
+// CreatePolicyResponse is returned from the Postgres module when a policy
+// record is successfully inserted. THe RPC layer will convert this type into
+// the external type we serialize over the wire.
+type CreatePolicyResponse struct {
+	ID    string
+	Token string
+	CreatePolicyRequest
+}
+
+// DeletePolicyRequest is a type used to pass incoming delete requests from the
+// RPC handler function to the Postgres DB layer.
+type DeletePolicyRequest struct {
+	ID    string
+	Token string
+}
+
+// PolicyResponse is a type used to return a list of policies from postgoreos
+// that should be returned to the client. Each record contains the ID of the
+// policy, its label, list of operations and the associated public key.
 type PolicyResponse struct {
-	ID    int64  `db:"id"`
-	Token string `db:"id"`
-	PolicyRequest
+	ID         string
+	Label      string
+	Operations []Operation
+	PublicKey  string
 }

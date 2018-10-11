@@ -1,9 +1,14 @@
 package postgres
 
 import (
+	"encoding/json"
+
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/jmoiron/sqlx"
+	"github.com/jmoiron/sqlx/types"
 	"github.com/pkg/errors"
+	"github.com/speps/go-hashids"
+
 	"github.com/thingful/iotpolicystore/pkg/config"
 )
 
@@ -22,6 +27,9 @@ type DB struct {
 	encryptionPassword []byte
 	verbose            bool
 	logger             kitlog.Logger
+
+	hashidData *hashids.HashIDData
+	hashid     *hashids.HashID
 }
 
 // Open is a helper function that connects to the DB and returns an instantiated
@@ -36,13 +44,18 @@ func Open(connStr string) (*sqlx.DB, error) {
 func NewDB(config *config.Config) *DB {
 	logger := kitlog.With(config.Logger, "module", "postgres")
 
-	logger.Log("msg", "creating postgres DB connection")
+	logger.Log("msg", "creating postgres DB connection", "hashidMinLength", config.HashidLength)
+
+	hd := hashids.NewData()
+	hd.Salt = config.HashidSalt
+	hd.MinLength = config.HashidLength
 
 	return &DB{
 		connStr:            config.ConnStr,
 		encryptionPassword: []byte(config.EncryptionPassword),
 		verbose:            config.Verbose,
 		logger:             logger,
+		hashidData:         hd,
 	}
 }
 
@@ -57,6 +70,13 @@ func (d *DB) Start() error {
 	}
 
 	d.DB = db
+
+	h, err := hashids.NewWithData(d.hashidData)
+	if err != nil {
+		return errors.Wrap(err, "failed to create hashid generator")
+	}
+
+	d.hashid = h
 
 	err = MigrateUp(d.DB, d.logger)
 	if err != nil {
@@ -77,11 +97,16 @@ func (d *DB) Stop() error {
 	return nil
 }
 
-func (d *DB) CreatePolicy(policy *PolicyRequest) (*PolicyResponse, error) {
-	// note the use of postgres native encryption to encrypt the token value
+// CreatePolicy is the function we expose from our Postgres module that is
+// responsible for persisting a policy to the database. It takes our local
+// PolicyRequest type which must be created from the incoming wire request, and
+// returns a response struct containing the new policies id and a token the
+// caller must keep secret.
+func (d *DB) CreatePolicy(req *CreatePolicyRequest) (*CreatePolicyResponse, error) {
+	// note the use of postgres native encryption to encrypt the token.
 	sql := `INSERT INTO policies
-    (public_key, label, token)
-  VALUES (:public_key, :label, pgp_sym_encrypt(:token, :encryption_password))
+    (public_key, label, token, operations)
+  VALUES (:public_key, :label, pgp_sym_encrypt(:token, :encryption_password), :operations)
 	RETURNING id`
 
 	token, err := GenerateToken(TokenLength)
@@ -89,11 +114,17 @@ func (d *DB) CreatePolicy(policy *PolicyRequest) (*PolicyResponse, error) {
 		return nil, errors.Wrap(err, "failed to generate random token")
 	}
 
+	b, err := json.Marshal(req.Operations)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal operations JSON")
+	}
+
 	mapArgs := map[string]interface{}{
-		"public_key":          policy.PublicKey,
-		"label":               policy.Label,
+		"public_key":          req.PublicKey,
+		"label":               req.Label,
 		"token":               token,
 		"encryption_password": d.encryptionPassword,
+		"operations":          types.JSONText(b),
 	}
 
 	sql, args, err := d.DB.BindNamed(sql, mapArgs)
@@ -101,14 +132,121 @@ func (d *DB) CreatePolicy(policy *PolicyRequest) (*PolicyResponse, error) {
 		return nil, errors.Wrap(err, "failed to bind named query")
 	}
 
-	var id int64
+	var id int
 	err = d.DB.Get(&id, sql, args...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute insert query")
 	}
 
-	return &PolicyResponse{
-		ID:    id,
+	encodedID, err := d.hashid.Encode([]int{id})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to hash policy id")
+	}
+
+	return &CreatePolicyResponse{
+		ID:    encodedID,
 		Token: token,
 	}, nil
+}
+
+// DeletePolicy is a method we expose from our Postgreo module which attempts to
+// delete a policy provided the caller knows the correct id and matching token.
+// It takes as input our local DeletePolicyRequest type, and if successful
+// returns nothing, returning an error should any step of the operation fail.
+// Note that attempting to delete a policy that has already been deleted will
+// return an error to the caller.
+func (d *DB) DeletePolicy(req *DeletePolicyRequest) error {
+	// we use a CTE here to get back a count of deleted rows
+	sql := `WITH deleted AS (
+		DELETE FROM policies p
+		WHERE p.id = :id
+		AND pgp_sym_decrypt(p.token, :encryption_password) = :token
+		RETURNING *)
+	SELECT COUNT(*) FROM deleted`
+
+	decodedIDList, err := d.hashid.DecodeWithError(req.ID)
+	if err != nil {
+		return errors.Wrap(err, "failed to decode hashed id")
+	}
+
+	if len(decodedIDList) != 1 {
+		return errors.New("unexpected hashed ID value")
+	}
+
+	mapArgs := map[string]interface{}{
+		"id":                  decodedIDList[0],
+		"token":               req.Token,
+		"encryption_password": d.encryptionPassword,
+	}
+
+	sql, args, err := d.DB.BindNamed(sql, mapArgs)
+	if err != nil {
+		return errors.Wrap(err, "failed to bind named query")
+	}
+
+	var count int
+	err = d.DB.Get(&count, sql, args...)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute delete query")
+	}
+
+	if count != 1 {
+		return errors.New("no policy rows were deleted")
+	}
+
+	return nil
+}
+
+// policy is an internal type used for pulling data back from the DB.
+type policy struct {
+	ID         int            `db:"id"`
+	Label      string         `db:"label"`
+	PublicKey  string         `db:"public_key"`
+	Operations types.JSONText `db:"operations"`
+}
+
+// ListPolicies returns a list of all PolicyResponse structs currently
+// registered in the database. We don't currently paginate or allow any
+// searching or filtering of policies as it is not expected that significant
+// numbers of policies will be registered.
+func (d *DB) ListPolicies() ([]*PolicyResponse, error) {
+	sql := `SELECT id, label, public_key, operations FROM policies ORDER BY label`
+
+	rows, err := d.DB.Queryx(sql)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to execute read query")
+	}
+
+	policies := []*PolicyResponse{}
+
+	for rows.Next() {
+		var p policy
+
+		err = rows.StructScan(&p)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to scan rows into policy struct")
+		}
+
+		hashedID, err := d.hashid.Encode([]int{p.ID})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to encode hashed id")
+		}
+
+		var operations []Operation
+		err = json.Unmarshal(p.Operations, &operations)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to unmarshal operations JSON")
+		}
+
+		policyResponse := &PolicyResponse{
+			ID:         hashedID,
+			Label:      p.Label,
+			PublicKey:  p.PublicKey,
+			Operations: operations,
+		}
+
+		policies = append(policies, policyResponse)
+	}
+
+	return policies, nil
 }
