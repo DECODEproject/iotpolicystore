@@ -18,6 +18,9 @@ VERSION := $(shell git describe --tags --always --dirty)
 # Build date - to be added to the binary
 BUILD_DATE := $(shell date -u "+%FT%H:%M:%S%Z")
 
+# Enable cgo
+CGO_ENABLED := 1
+
 # Do not change the following variables
 
 PWD := $(shell pwd)
@@ -28,15 +31,15 @@ ALL_ARCH := amd64 arm arm64
 
 ifeq ($(ARCH),amd64)
 	BASE_IMAGE?=alpine
-	BUILD_IMAGE?=golang:1.10-alpine
+	BUILD_IMAGE?=golang:1.11-alpine
 endif
 ifeq ($(ARCH),arm)
 	BASE_IMAGE?=arm32v7/busybox
-	BUILD_IMAGE?=arm32v7/golang:1.10-stretch
+	BUILD_IMAGE?=arm32v7/golang:1.11-stretch
 endif
 ifeq ($(ARCH),arm64)
 	BASE_IMAGE?=arm64v8/busybox
-	BUILD_IMAGE?=arm64v8/golang:1.10-alpine
+	BUILD_IMAGE?=arm64v8/golang:1.11-alpine
 endif
 
 IMAGE := $(REGISTRY)/$(BIN)-$(ARCH)
@@ -74,6 +77,7 @@ bin/$(ARCH)/$(BIN): .build-dirs .compose
 			PKG=$(PKG) \
 			BUILD_DATE=$(BUILD_DATE) \
 			BINARY_NAME=$(BIN) \
+			CGO_ENABLED=$(CGO_ENABLED) \
 			./build/build.sh \
 		"
 
@@ -99,6 +103,7 @@ test: .build-dirs .compose ## Run tests in the containerized environment
 		-e "POLICYSTORE_DATABASE_URL=postgres://policystore:password@postgres/policystore_test?sslmode=disable" \
 		app \
 		/bin/sh -c " \
+			CGO_ENABLED=$(CGO_ENABLED) \
 			./build/test.sh $(SRC_DIRS) \
 		"
 
