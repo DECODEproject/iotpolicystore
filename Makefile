@@ -183,4 +183,4 @@ psql: ## open psql shell
 		-e "PGPASSWORD=password" \
 		postgres \
 		psql \
-		iotstore_development
+		policystore_development
