@@ -4,10 +4,12 @@ import (
 	"os"
 
 	kitlog "github.com/go-kit/kit/log"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/thingful/iotpolicystore/pkg/config"
 	"github.com/thingful/iotpolicystore/pkg/postgres"
+	twirp "github.com/thingful/twirp-policystore-go"
 )
 
 type PostgresSuite struct {
@@ -50,6 +52,24 @@ func (s *PostgresSuite) TearDownTest() {
 	if err != nil {
 		s.T().Fatalf("Failed to stop db component: %v", err)
 	}
+}
+
+func (s *PostgresSuite) TestClosedDB() {
+	req := &twirp.CreateEntitlementPolicyRequest{
+		PublicKey: "abc123",
+		Label:     "policy label",
+		Operations: []*twirp.Operation{
+			&twirp.Operation{
+				SensorId: 2,
+				Action:   twirp.Operation_SHARE,
+			},
+		},
+	}
+
+	s.db.Stop()
+
+	_, err := s.db.CreatePolicy(req)
+	assert.NotNil(s.T(), err)
 }
 
 //func (s *PostgresSuite) TestRoundTrip() {
