@@ -12,6 +12,7 @@ import (
 	goji "goji.io"
 
 	"github.com/thingful/iotpolicystore/pkg/config"
+	"github.com/thingful/iotpolicystore/pkg/middleware"
 	"github.com/thingful/iotpolicystore/pkg/rpc"
 )
 
@@ -41,6 +42,8 @@ func NewServer(config *config.Config) *Server {
 
 	// pass mux into handlers to add mappings
 	MuxHandlers(mux)
+
+	mux.Use(middleware.RequestIDMiddleware)
 
 	// create our http.Server instance
 	srv := &http.Server{
