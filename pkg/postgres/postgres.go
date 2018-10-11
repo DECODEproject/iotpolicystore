@@ -133,6 +133,7 @@ func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.Cre
 		return nil, errors.Wrap(err, "failed to bind named query")
 	}
 
+	// note we use a Get query here so we can read back the generated ID value
 	var id int
 	err = d.DB.Get(&id, sql, args...)
 	if err != nil {
@@ -171,7 +172,7 @@ func (d *DB) DeletePolicy(req *twirp.DeleteEntitlementPolicyRequest) error {
 	}
 
 	if len(decodedIDList) != 1 {
-		return errors.New("unexpected hashed ID value")
+		return errors.New("unexpected hashed ID")
 	}
 
 	mapArgs := map[string]interface{}{
@@ -192,7 +193,7 @@ func (d *DB) DeletePolicy(req *twirp.DeleteEntitlementPolicyRequest) error {
 	}
 
 	if count != 1 {
-		return errors.New("no policy rows were deleted")
+		return errors.New("no policies were deleted, either the policy id or token must be invalid")
 	}
 
 	return nil
@@ -225,7 +226,7 @@ func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, er
 
 		err = rows.StructScan(&p)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to scan rows into policy struct")
+			return nil, errors.Wrap(err, "failed to scan policy row from db")
 		}
 
 		hashedID, err := d.hashid.Encode([]int{p.ID})
