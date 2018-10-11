@@ -103,6 +103,96 @@ func (s *PolicyStoreSuite) TestRoundTrip() {
 	assert.Len(s.T(), listResp.Policies, 0)
 }
 
+func (s *PolicyStoreSuite) TestInvalidCreateRequests() {
+	testcases := []struct {
+		label         string
+		request       *twirp.CreateEntitlementPolicyRequest
+		expectedError string
+	}{
+		{
+			label: "missing public_key",
+			request: &twirp.CreateEntitlementPolicyRequest{
+				PublicKey: "",
+				Label:     "foo",
+			},
+			expectedError: "twirp error invalid_argument: public_key is required",
+		},
+		{
+			label: "missing label",
+			request: &twirp.CreateEntitlementPolicyRequest{
+				PublicKey: "abc123",
+				Label:     "",
+			},
+			expectedError: "twirp error invalid_argument: label is required",
+		},
+	}
+
+	for _, tc := range testcases {
+		s.T().Run(tc.label, func(t *testing.T) {
+			_, err := s.ps.CreateEntitlementPolicy(context.Background(), tc.request)
+			assert.NotNil(t, err)
+			assert.Equal(t, tc.expectedError, err.Error())
+		})
+	}
+}
+
+func (s *PolicyStoreSuite) TestInvalidDeleteRequest() {
+	testcases := []struct {
+		label         string
+		request       *twirp.DeleteEntitlementPolicyRequest
+		expectedError string
+	}{
+		{
+			label: "missing policy_id",
+			request: &twirp.DeleteEntitlementPolicyRequest{
+				PolicyId: "",
+				Token:    "foobar",
+			},
+			expectedError: "twirp error invalid_argument: policy_id is required",
+		},
+		{
+			label: "missing token",
+			request: &twirp.DeleteEntitlementPolicyRequest{
+				PolicyId: "abc123",
+				Token:    "",
+			},
+			expectedError: "twirp error invalid_argument: token is required",
+		},
+		{
+			label: "invalid policy_id",
+			request: &twirp.DeleteEntitlementPolicyRequest{
+				PolicyId: "abc123",
+				Token:    "foobar",
+			},
+			expectedError: "twirp error internal: failed to decode hashed id: mismatch between encode and decode: abc123 start xm14aAYw re-encoded. result: [39775]",
+		},
+		{
+			label: "invalid policy_id (double hashid)",
+			request: &twirp.DeleteEntitlementPolicyRequest{
+				PolicyId: "Vbg3HEbX",
+				Token:    "foobar",
+			},
+			expectedError: "twirp error internal: unexpected hashed ID",
+		},
+		{
+			label: "missing resource",
+			request: &twirp.DeleteEntitlementPolicyRequest{
+				PolicyId: "xm14aAYw",
+				Token:    "foobar",
+			},
+			expectedError: "twirp error internal: no policies were deleted, either the policy id or token must be invalid",
+		},
+	}
+
+	for _, tc := range testcases {
+		s.T().Run(tc.label, func(t *testing.T) {
+			_, err := s.ps.DeleteEntitlementPolicy(context.Background(), tc.request)
+			assert.NotNil(t, err)
+			assert.Equal(t, tc.expectedError, err.Error())
+		})
+	}
+}
+
 func TestPolicyStoreSuite(t *testing.T) {
 	suite.Run(t, new(PolicyStoreSuite))
 }

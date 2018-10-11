@@ -77,7 +77,7 @@ func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.Creat
 // delete a previously created entitlement policy from the datastore.
 func (p *policystore) DeleteEntitlementPolicy(ctx context.Context, req *ps.DeleteEntitlementPolicyRequest) (*ps.DeleteEntitlementPolicyResponse, error) {
 	if req.PolicyId == "" {
-		return nil, twirp.RequiredArgumentError("public_key")
+		return nil, twirp.RequiredArgumentError("policy_id")
 	}
 
 	if req.Token == "" {
