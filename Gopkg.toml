@@ -31,4 +31,48 @@
 
 [[constraint]]
   name = "github.com/spf13/cobra"
-  version = "0.0.2"
+  version = "0.0.3"
+
+[[constraint]]
+  name = "github.com/go-kit/kit"
+  version = "0.7.0"
+
+[[constraint]]
+  name = "github.com/spf13/viper"
+  version = "1.2.1"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/thingful/twirp-policystore-go"
+
+[[constraint]]
+  name = "goji.io"
+  version = "2.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/jmoiron/sqlx"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
+  name = "github.com/golang-migrate/migrate"
+  version = "3.5.1"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/serenize/snaker"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/lestrrat-go/backoff"
+
+[[constraint]]
+  name = "github.com/speps/go-hashids"
+  version = "2.0.0"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.2.2"

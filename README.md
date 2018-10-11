@@ -1,32 +1,6 @@
-# go-build-template
+# iotpolicystore
 
-Opinionated template for Golang projects.
-
-* Based on https://github.com/thockin/go-build-template
-* Requires `docker` and `docker-compose` to use.
-* Uses `docker-compose` rather than raw docker to allow adding services during
-  development and having compose link them together.
-* Uses `dep` for dependency manageement
-* Includes `cobra` for cli parsing
-
-## Usage
-
-To use, copy these files and make the following changes:
-
-In the Makefile:
-
-* change BIN to your binary name
-* change PKG to the Go import path of the repo
-* change REGISTRY to the Docker registry id you wish to push to.
-
-In Dockerfile.in:
-
-* change MAINTAINER if required
-* maybe change or remove USER if required
-
-Finally:
-
-* Rename `cmd/myapp` to `cmd/$BIN`
+Policy store component for DECODE IoT pilot.
 
 ## Building
 

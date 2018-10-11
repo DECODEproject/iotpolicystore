@@ -16,5 +16,30 @@ services:
       - ARG_PWD/.cache/go-build:/.cache/go-build
     working_dir: /go/src/ARG_PKG
     ports:
-      - "8080:8080"
+      - "8082:8082"
     command: /go/bin/ARG_BIN server
+    depends_on:
+      - postgres
+    environment:
+      - PGHOST=postgres
+      - PGPASSWORD=password
+      - PGUSER=policystore
+      - POLICYSTORE_DATABASE_URL=postgres://policystore:password@postgres:5432/policystore_development?sslmode=disable
+      - POLICYSTORE_ENCRYPTION_PASSWORD=topsecretpassword
+      - POLICYSTORE_HASHID_SALT=Mm0W1jBfK3NUXcELUFEyIA==
+
+  postgres:
+    build:
+      context: ./docker/postgres
+    ports:
+      - "5432"
+    volumes:
+      - postgres_vol:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=policystore
+      - POSTGRES_DB=postgres
+      - DATABASES=policystore_development,policystore_test
+
+volumes:
+  postgres_vol:

@@ -4,6 +4,7 @@ MAINTAINER Thingful <info@thingful.net>
 
 # add git and any other required packages to build the application
 RUN apk add --update \
+    build-base \
     git && \
   rm -rf /var/cache/apk/*
 
