@@ -3,6 +3,8 @@ package rpc
 import (
 	"context"
 
+	"github.com/twitchtv/twirp"
+
 	kitlog "github.com/go-kit/kit/log"
 	ps "github.com/thingful/twirp-policystore-go"
 
@@ -53,14 +55,41 @@ func (p *policystore) Stop() error {
 // in our Twirp interface. This method is the mechanism by which a caller can
 // write a new entitlement policy into the policystore.
 func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.CreateEntitlementPolicyRequest) (*ps.CreateEntitlementPolicyResponse, error) {
-	return nil, nil
+	// validate request
+	if req.PublicKey == "" {
+		return nil, twirp.RequiredArgumentError("public_key")
+	}
+
+	if req.Label == "" {
+		return nil, twirp.RequiredArgumentError("label")
+	}
+
+	resp, err := p.db.CreatePolicy(req)
+	if err != nil {
+		return nil, twirp.InternalErrorWith(err)
+	}
+
+	return resp, nil
 }
 
 // DeleteEntitlementPolicy is our implementation of one of the methods defined
 // in our Twirp interface. This method is the mechanism by which a caller can
 // delete a previously created entitlement policy from the datastore.
 func (p *policystore) DeleteEntitlementPolicy(ctx context.Context, req *ps.DeleteEntitlementPolicyRequest) (*ps.DeleteEntitlementPolicyResponse, error) {
-	return nil, nil
+	if req.PolicyId == "" {
+		return nil, twirp.RequiredArgumentError("public_key")
+	}
+
+	if req.Token == "" {
+		return nil, twirp.RequiredArgumentError("token")
+	}
+
+	err := p.db.DeletePolicy(req)
+	if err != nil {
+		return nil, twirp.InternalErrorWith(err)
+	}
+
+	return &ps.DeleteEntitlementPolicyResponse{}, nil
 }
 
 // ListEntitlementPolicies is our implementation of one of the methods defined
@@ -68,5 +97,12 @@ func (p *policystore) DeleteEntitlementPolicy(ctx context.Context, req *ps.Delet
 // obtain a list of all registered policies suitable for presenting to an end
 // user via some sort of UI component.
 func (p *policystore) ListEntitlementPolicies(ctx context.Context, req *ps.ListEntitlementPoliciesRequest) (*ps.ListEntitlementPoliciesResponse, error) {
-	return nil, nil
+	policies, err := p.db.ListPolicies()
+	if err != nil {
+		return nil, twirp.InternalErrorWith(err)
+	}
+
+	return &ps.ListEntitlementPoliciesResponse{
+		Policies: policies,
+	}, nil
 }
