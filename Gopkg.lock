@@ -96,11 +96,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7654989089e5bd5b6734ec3be8b695e87d3f1f8d95620b343fd7d3995a5b60d7"
+  digest = "1:d75dfe3beea955b6cf5c3c75fd3ddebe48835951d205f359e69f68d7ff924ef1"
   name = "github.com/jmoiron/sqlx"
   packages = [
     ".",
     "reflectx",
+    "types",
   ]
   pruneopts = "UT"
   revision = "0dae4fefe7c0e190f7b5a78dac28a1c82cc8d849"
@@ -179,6 +180,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "a683aaf2d516deecd70cad0c72e3ca773ecfcef0"
+
+[[projects]]
+  digest = "1:b749dfc1b2734006da71966102ca708c5575081590f4bbfa7bf6ba1979f04ee9"
+  name = "github.com/speps/go-hashids"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ad304c6ede07ca1f915c30a5510c45860aa165a7"
+  version = "v2.0.0"
 
 [[projects]]
   digest = "1:6a4a11ba764a56d2758899ec6f3848d24698d48442ebce85ee7a3f63284526cd"
@@ -316,9 +325,11 @@
     "github.com/golang-migrate/migrate/database/postgres",
     "github.com/golang-migrate/migrate/source/go_bindata",
     "github.com/jmoiron/sqlx",
+    "github.com/jmoiron/sqlx/types",
     "github.com/lestrrat-go/backoff",
     "github.com/pkg/errors",
     "github.com/serenize/snaker",
+    "github.com/speps/go-hashids",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
