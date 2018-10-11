@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx/types"
 	"github.com/pkg/errors"
 	"github.com/speps/go-hashids"
+	twirp "github.com/thingful/twirp-policystore-go"
 
 	"github.com/thingful/iotpolicystore/pkg/config"
 )
@@ -102,7 +103,7 @@ func (d *DB) Stop() error {
 // PolicyRequest type which must be created from the incoming wire request, and
 // returns a response struct containing the new policies id and a token the
 // caller must keep secret.
-func (d *DB) CreatePolicy(req *CreatePolicyRequest) (*CreatePolicyResponse, error) {
+func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.CreateEntitlementPolicyResponse, error) {
 	// note the use of postgres native encryption to encrypt the token.
 	sql := `INSERT INTO policies
     (public_key, label, token, operations)
@@ -143,9 +144,9 @@ func (d *DB) CreatePolicy(req *CreatePolicyRequest) (*CreatePolicyResponse, erro
 		return nil, errors.Wrap(err, "failed to hash policy id")
 	}
 
-	return &CreatePolicyResponse{
-		ID:    encodedID,
-		Token: token,
+	return &twirp.CreateEntitlementPolicyResponse{
+		PolicyId: encodedID,
+		Token:    token,
 	}, nil
 }
 
@@ -155,7 +156,7 @@ func (d *DB) CreatePolicy(req *CreatePolicyRequest) (*CreatePolicyResponse, erro
 // returns nothing, returning an error should any step of the operation fail.
 // Note that attempting to delete a policy that has already been deleted will
 // return an error to the caller.
-func (d *DB) DeletePolicy(req *DeletePolicyRequest) error {
+func (d *DB) DeletePolicy(req *twirp.DeleteEntitlementPolicyRequest) error {
 	// we use a CTE here to get back a count of deleted rows
 	sql := `WITH deleted AS (
 		DELETE FROM policies p
@@ -164,7 +165,7 @@ func (d *DB) DeletePolicy(req *DeletePolicyRequest) error {
 		RETURNING *)
 	SELECT COUNT(*) FROM deleted`
 
-	decodedIDList, err := d.hashid.DecodeWithError(req.ID)
+	decodedIDList, err := d.hashid.DecodeWithError(req.PolicyId)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode hashed id")
 	}
@@ -209,7 +210,7 @@ type policy struct {
 // registered in the database. We don't currently paginate or allow any
 // searching or filtering of policies as it is not expected that significant
 // numbers of policies will be registered.
-func (d *DB) ListPolicies() ([]*PolicyResponse, error) {
+func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, error) {
 	sql := `SELECT id, label, public_key, operations FROM policies ORDER BY label`
 
 	rows, err := d.DB.Queryx(sql)
@@ -217,7 +218,7 @@ func (d *DB) ListPolicies() ([]*PolicyResponse, error) {
 		return nil, errors.Wrap(err, "failed to execute read query")
 	}
 
-	policies := []*PolicyResponse{}
+	policies := []*twirp.ListEntitlementPoliciesResponse_Policy{}
 
 	for rows.Next() {
 		var p policy
@@ -232,14 +233,14 @@ func (d *DB) ListPolicies() ([]*PolicyResponse, error) {
 			return nil, errors.Wrap(err, "failed to encode hashed id")
 		}
 
-		var operations []Operation
+		var operations []*twirp.Operation
 		err = json.Unmarshal(p.Operations, &operations)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to unmarshal operations JSON")
 		}
 
-		policyResponse := &PolicyResponse{
-			ID:         hashedID,
+		policyResponse := &twirp.ListEntitlementPoliciesResponse_Policy{
+			PolicyId:   hashedID,
 			Label:      p.Label,
 			PublicKey:  p.PublicKey,
 			Operations: operations,
