@@ -252,3 +252,13 @@ func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, er
 
 	return policies, nil
 }
+
+// Ping executes the simplest query against the DB to verify that it is
+// connected and responding.
+func (d *DB) Ping() error {
+	_, err := d.DB.Exec("SELECT 1")
+	if err != nil {
+		return err
+	}
+	return nil
+}

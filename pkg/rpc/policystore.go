@@ -24,9 +24,7 @@ var _ ps.PolicyStore = &policystore{}
 
 // NewPolicyStore returns a new policy store instance. It is not ready to be
 // used until the Start() method is called on the object.
-func NewPolicyStore(config *config.Config) ps.PolicyStore {
-	db := postgres.NewDB(config)
-
+func NewPolicyStore(config *config.Config, db *postgres.DB) ps.PolicyStore {
 	logger := kitlog.With(config.Logger, "module", "rpc")
 	logger.Log("msg", "creating policystore rpc server")
 

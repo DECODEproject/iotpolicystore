@@ -18,6 +18,7 @@ import (
 
 	"github.com/thingful/iotpolicystore/pkg/config"
 	"github.com/thingful/iotpolicystore/pkg/middleware"
+	"github.com/thingful/iotpolicystore/pkg/postgres"
 	"github.com/thingful/iotpolicystore/pkg/rpc"
 	"github.com/thingful/iotpolicystore/pkg/version"
 )
@@ -59,7 +60,9 @@ type Stoppable interface {
 
 // NewServer returns a new simple HTTP server.
 func NewServer(config *config.Config) *Server {
-	store := rpc.NewPolicyStore(config)
+	db := postgres.NewDB(config)
+
+	store := rpc.NewPolicyStore(config, db)
 	hooks := twrpprom.NewServerHooks(nil)
 
 	twirpHandler := policystore.NewPolicyStoreServer(store, hooks)
@@ -70,7 +73,7 @@ func NewServer(config *config.Config) *Server {
 	mux.Handle(pat.Get("/metrics"), promhttp.Handler())
 
 	// pass mux into handlers to add mappings
-	MuxHandlers(mux)
+	MuxHandlers(mux, db)
 
 	mux.Use(middleware.RequestIDMiddleware)
 
