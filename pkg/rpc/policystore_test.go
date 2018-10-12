@@ -125,6 +125,110 @@ func (s *PolicyStoreSuite) TestInvalidCreateRequests() {
 			},
 			expectedError: "twirp error invalid_argument: label is required",
 		},
+		{
+			label: "bins for share",
+			request: &twirp.CreateEntitlementPolicyRequest{
+				PublicKey: "abc123",
+				Label:     "foobar",
+				Operations: []*twirp.Operation{
+					&twirp.Operation{
+						SensorId: 2,
+						Action:   twirp.Operation_SHARE,
+						Bins:     []float64{0, 10},
+					},
+				},
+			},
+			expectedError: "twirp error invalid_argument: operation SHARE type must not specify bins or an interval",
+		},
+		{
+			label: "interval for share",
+			request: &twirp.CreateEntitlementPolicyRequest{
+				PublicKey: "abc123",
+				Label:     "foobar",
+				Operations: []*twirp.Operation{
+					&twirp.Operation{
+						SensorId: 2,
+						Action:   twirp.Operation_SHARE,
+						Interval: 300,
+					},
+				},
+			},
+			expectedError: "twirp error invalid_argument: operation SHARE type must not specify bins or an interval",
+		},
+		{
+			label: "no bins for bin",
+			request: &twirp.CreateEntitlementPolicyRequest{
+				PublicKey: "abc123",
+				Label:     "foobar",
+				Operations: []*twirp.Operation{
+					&twirp.Operation{
+						SensorId: 2,
+						Action:   twirp.Operation_BIN,
+					},
+				},
+			},
+			expectedError: "twirp error invalid_argument: operation BIN type must specify bins, and no interval",
+		},
+		{
+			label: "interval for bins",
+			request: &twirp.CreateEntitlementPolicyRequest{
+				PublicKey: "abc123",
+				Label:     "foobar",
+				Operations: []*twirp.Operation{
+					&twirp.Operation{
+						SensorId: 2,
+						Action:   twirp.Operation_BIN,
+						Bins:     []float64{10, 20},
+						Interval: 900,
+					},
+				},
+			},
+			expectedError: "twirp error invalid_argument: operation BIN type must specify bins, and no interval",
+		},
+		{
+			label: "no interval for moving_avg",
+			request: &twirp.CreateEntitlementPolicyRequest{
+				PublicKey: "abc123",
+				Label:     "foobar",
+				Operations: []*twirp.Operation{
+					&twirp.Operation{
+						SensorId: 2,
+						Action:   twirp.Operation_MOVING_AVG,
+					},
+				},
+			},
+			expectedError: "twirp error invalid_argument: operation MOVING_AVG type must specify a non-zero positive interval, and no bins",
+		},
+		{
+			label: "bins for moving_avg",
+			request: &twirp.CreateEntitlementPolicyRequest{
+				PublicKey: "abc123",
+				Label:     "foobar",
+				Operations: []*twirp.Operation{
+					&twirp.Operation{
+						SensorId: 2,
+						Action:   twirp.Operation_MOVING_AVG,
+						Interval: 900,
+						Bins:     []float64{10, 20},
+					},
+				},
+			},
+			expectedError: "twirp error invalid_argument: operation MOVING_AVG type must specify a non-zero positive interval, and no bins",
+		},
+		{
+			label: "unexpected action type",
+			request: &twirp.CreateEntitlementPolicyRequest{
+				PublicKey: "abc123",
+				Label:     "foobar",
+				Operations: []*twirp.Operation{
+					&twirp.Operation{
+						SensorId: 2,
+						Action:   9,
+					},
+				},
+			},
+			expectedError: "twirp error invalid_argument: operation invalid operation type",
+		},
 	}
 
 	for _, tc := range testcases {
