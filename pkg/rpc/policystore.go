@@ -64,6 +64,11 @@ func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.Creat
 		return nil, twirp.RequiredArgumentError("label")
 	}
 
+	err := validateOperations(req.Operations)
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := p.db.CreatePolicy(req)
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
@@ -105,4 +110,40 @@ func (p *policystore) ListEntitlementPolicies(ctx context.Context, req *ps.ListE
 	return &ps.ListEntitlementPoliciesResponse{
 		Policies: policies,
 	}, nil
+}
+
+// validateOperations validates the content of all operations
+func validateOperations(operations []*ps.Operation) error {
+	for _, operation := range operations {
+		err := validateOperation(operation)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// validateOperation validates a single operation. Used by validateOperations to
+// check each operation. An operation is valid if: 1) it is of type SHARE and
+// has no bins or interval specified, 2) if it is of type BIN and it has bins
+// specified, 3) it is of type MOVING_AVG and it has a time interval. Any other
+// combination should be flagged as invalid.
+func validateOperation(operation *ps.Operation) error {
+	switch operation.Action {
+	case ps.Operation_SHARE:
+		if len(operation.Bins) > 0 || operation.Interval > 0 {
+			return twirp.InvalidArgumentError("operation", "SHARE type must not specify bins or an interval")
+		}
+	case ps.Operation_BIN:
+		if len(operation.Bins) == 0 || operation.Interval > 0 {
+			return twirp.InvalidArgumentError("operation", "BIN type must specify bins, and no interval")
+		}
+	case ps.Operation_MOVING_AVG:
+		if operation.Interval <= 0 || len(operation.Bins) > 0 {
+			return twirp.InvalidArgumentError("operation", "MOVING_AVG type must specify a non-zero positive interval, and no bins")
+		}
+	default:
+		return twirp.InvalidArgumentError("operation", "invalid operation type")
+	}
+	return nil
 }
