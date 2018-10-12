@@ -40,9 +40,11 @@ func init() {
 
 // Server is our custom server type.
 type Server struct {
-	srv    *http.Server
-	logger kitlog.Logger
-	store  ps.PolicyStore
+	srv      *http.Server
+	logger   kitlog.Logger
+	store    ps.PolicyStore
+	certFile string
+	keyFile  string
 }
 
 // Startable is an interface for a component that can be started.
@@ -104,9 +106,16 @@ func (s *Server) Start() error {
 			"twirpPrefix", policystore.PolicyStorePathPrefix,
 		)
 
-		if err := s.srv.ListenAndServe(); err != nil {
-			s.logger.Log("err", err)
-			os.Exit(1)
+		if s.isTLSEnabled() {
+			if err := s.srv.ListenAndServeTLS(s.certFile, s.keyFile); err != nil {
+				s.logger.Log("err", err)
+				os.Exit(1)
+			}
+		} else {
+			if err := s.srv.ListenAndServe(); err != nil {
+				s.logger.Log("err", err)
+				os.Exit(1)
+			}
 		}
 	}()
 
@@ -131,4 +140,9 @@ func (s *Server) Stop() error {
 	}
 
 	return s.srv.Shutdown(ctx)
+}
+
+// isTLSEnabled returns true if we have a non empty cert and key file
+func (s *Server) isTLSEnabled() bool {
+	return s.certFile != "" && s.keyFile != ""
 }

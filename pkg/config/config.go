@@ -11,5 +11,7 @@ type Config struct {
 	HashidLength       int
 	HashidSalt         string
 	Verbose            bool
+	CertFile           string
+	KeyFile            string
 	Logger             kitlog.Logger
 }
