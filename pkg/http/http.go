@@ -82,9 +82,11 @@ func NewServer(config *config.Config) *Server {
 
 	// return the instantiated server
 	return &Server{
-		srv:    srv,
-		logger: kitlog.With(config.Logger, "module", "http"),
-		store:  store,
+		srv:      srv,
+		logger:   kitlog.With(config.Logger, "module", "http"),
+		store:    store,
+		certFile: config.CertFile,
+		keyFile:  config.KeyFile,
 	}
 }
 
@@ -104,6 +106,8 @@ func (s *Server) Start() error {
 			"msg", "starting server",
 			"addr", s.srv.Addr,
 			"twirpPrefix", policystore.PolicyStorePathPrefix,
+			"certFile", s.certFile,
+			"keyFile", s.keyFile,
 		)
 
 		if s.isTLSEnabled() {
