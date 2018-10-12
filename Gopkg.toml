@@ -84,3 +84,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/joneskoo/twirp-serverhook-prometheus"
+
+[[constraint]]
+  name = "github.com/rs/cors"
+  version = "1.6.0"

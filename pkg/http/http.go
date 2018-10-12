@@ -11,6 +11,7 @@ import (
 	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/cors"
 	policystore "github.com/thingful/twirp-policystore-go"
 	ps "github.com/thingful/twirp-policystore-go"
 	goji "goji.io"
@@ -75,7 +76,12 @@ func NewServer(config *config.Config) *Server {
 	// pass mux into handlers to add mappings
 	MuxHandlers(mux, db)
 
+	// add cors middleware - note here we are enabling the default of allowing
+	// requests from any domain.
+	c := cors.New(cors.Options{})
+
 	mux.Use(middleware.RequestIDMiddleware)
+	mux.Use(c.Handler)
 
 	// create our http.Server instance
 	srv := &http.Server{
