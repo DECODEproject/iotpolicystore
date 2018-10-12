@@ -3,17 +3,41 @@ package http
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/thingful/iotpolicystore/pkg/config"
+
+	kitlog "github.com/go-kit/kit/log"
+
+	"github.com/thingful/iotpolicystore/pkg/postgres"
 )
 
 func TestHealthCheckHandler(t *testing.T) {
+	connStr := os.Getenv("POLICYSTORE_DATABASE_URL")
+	logger := kitlog.NewNopLogger()
+
+	db := postgres.NewDB(&config.Config{
+		ConnStr:            connStr,
+		Logger:             logger,
+		HashidLength:       8,
+		HashidSalt:         "salt",
+		EncryptionPassword: "password",
+	})
+
+	err := db.Start()
+	assert.Nil(t, err)
+
+	defer db.Stop()
+
 	req, err := http.NewRequest(http.MethodGet, "/pulse", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(healthCheckHandler)
+	handler := healthCheckHandler(db)
 
 	handler.ServeHTTP(rr, req)
 

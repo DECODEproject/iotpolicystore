@@ -29,25 +29,24 @@ func (s *PolicyStoreSuite) SetupTest() {
 	logger := kitlog.NewNopLogger()
 	connStr := os.Getenv("POLICYSTORE_DATABASE_URL")
 
-	db, err := postgres.Open(connStr)
-	if err != nil {
-		s.T().Fatalf("failed to open db connection: %v", err)
-	}
-
-	postgres.MigrateDownAll(db, logger)
-
-	err = db.Close()
-	if err != nil {
-		s.T().Fatalf("failed to close db connection: %v", err)
-	}
-
-	s.ps = rpc.NewPolicyStore(&config.Config{
+	config := &config.Config{
 		ConnStr:            connStr,
 		HashidLength:       8,
 		HashidSalt:         "hashid-salt",
 		EncryptionPassword: "password",
 		Logger:             logger,
-	})
+	}
+
+	db := postgres.NewDB(config)
+	err := db.Start()
+	if err != nil {
+		s.T().Fatalf("failed to start db: %v", err)
+	}
+
+	postgres.MigrateDownAll(db.DB, logger)
+	postgres.MigrateUp(db.DB, logger)
+
+	s.ps = rpc.NewPolicyStore(config, db)
 
 	err = s.ps.(component).Start()
 	if err != nil {
