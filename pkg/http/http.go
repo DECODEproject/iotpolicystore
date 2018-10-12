@@ -8,13 +8,35 @@ import (
 	"time"
 
 	kitlog "github.com/go-kit/kit/log"
+	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	policystore "github.com/thingful/twirp-policystore-go"
 	ps "github.com/thingful/twirp-policystore-go"
 	goji "goji.io"
+	"goji.io/pat"
 
 	"github.com/thingful/iotpolicystore/pkg/config"
 	"github.com/thingful/iotpolicystore/pkg/middleware"
 	"github.com/thingful/iotpolicystore/pkg/rpc"
+	"github.com/thingful/iotpolicystore/pkg/version"
 )
+
+var (
+	versionGauge = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "version",
+			Help: "the binary version",
+			ConstLabels: map[string]string{
+				"version": version.Version,
+			},
+		},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(versionGauge)
+}
 
 // Server is our custom server type.
 type Server struct {
@@ -36,9 +58,14 @@ type Stoppable interface {
 // NewServer returns a new simple HTTP server.
 func NewServer(config *config.Config) *Server {
 	store := rpc.NewPolicyStore(config)
+	hooks := twrpprom.NewServerHooks(nil)
+
+	twirpHandler := policystore.NewPolicyStoreServer(store, hooks)
 
 	// create a goji multiplexer
 	mux := goji.NewMux()
+	mux.Handle(pat.Post(policystore.PolicyStorePathPrefix+"*"), twirpHandler)
+	mux.Handle(pat.Get("/metrics"), promhttp.Handler())
 
 	// pass mux into handlers to add mappings
 	MuxHandlers(mux)
@@ -74,6 +101,7 @@ func (s *Server) Start() error {
 		s.logger.Log(
 			"msg", "starting server",
 			"addr", s.srv.Addr,
+			"twirpPrefix", policystore.PolicyStorePathPrefix,
 		)
 
 		if err := s.srv.ListenAndServe(); err != nil {
