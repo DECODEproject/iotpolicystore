@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/DECODEproject/iotpolicystore/pkg/migrations"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/golang-migrate/migrate"
 	psm "github.com/golang-migrate/migrate/database/postgres"
@@ -15,7 +16,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/serenize/snaker"
-	"github.com/thingful/iotpolicystore/pkg/migrations"
 )
 
 // MigrateUp attempts to run all up migrations against our Postgres instance.

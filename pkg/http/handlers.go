@@ -4,7 +4,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/thingful/iotpolicystore/pkg/postgres"
+	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
 	goji "goji.io"
 	"goji.io/pat"
 )

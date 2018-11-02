@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/thingful/iotpolicystore/pkg/config"
-	"github.com/thingful/iotpolicystore/pkg/http"
-	"github.com/thingful/iotpolicystore/pkg/logger"
+	"github.com/DECODEproject/iotpolicystore/pkg/config"
+	"github.com/DECODEproject/iotpolicystore/pkg/http"
+	"github.com/DECODEproject/iotpolicystore/pkg/logger"
 )
 
 var serverCmd = &cobra.Command{

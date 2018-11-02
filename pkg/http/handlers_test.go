@@ -6,12 +6,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/DECODEproject/iotpolicystore/pkg/config"
 	"github.com/stretchr/testify/assert"
-	"github.com/thingful/iotpolicystore/pkg/config"
 
 	kitlog "github.com/go-kit/kit/log"
 
-	"github.com/thingful/iotpolicystore/pkg/postgres"
+	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
 )
 
 func TestHealthCheckHandler(t *testing.T) {

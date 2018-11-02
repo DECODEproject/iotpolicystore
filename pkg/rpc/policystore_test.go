@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	twirp "github.com/thingful/twirp-policystore-go"
 
-	"github.com/thingful/iotpolicystore/pkg/config"
-	"github.com/thingful/iotpolicystore/pkg/postgres"
-	"github.com/thingful/iotpolicystore/pkg/rpc"
+	"github.com/DECODEproject/iotpolicystore/pkg/config"
+	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
+	"github.com/DECODEproject/iotpolicystore/pkg/rpc"
 )
 
 type PolicyStoreSuite struct {

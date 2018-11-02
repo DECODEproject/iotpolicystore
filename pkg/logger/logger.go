@@ -5,7 +5,7 @@ import (
 
 	kitlog "github.com/go-kit/kit/log"
 
-	"github.com/thingful/iotpolicystore/pkg/version"
+	"github.com/DECODEproject/iotpolicystore/pkg/version"
 )
 
 // NewLogger returns an instantiated kitlog.Logger instance ready for use.

@@ -8,8 +8,8 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 	ps "github.com/thingful/twirp-policystore-go"
 
-	"github.com/thingful/iotpolicystore/pkg/config"
-	"github.com/thingful/iotpolicystore/pkg/postgres"
+	"github.com/DECODEproject/iotpolicystore/pkg/config"
+	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
 )
 
 // policystore is the type that we use to implement the PolicyStore interface

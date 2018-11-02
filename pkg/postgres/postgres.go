@@ -10,7 +10,7 @@ import (
 	"github.com/speps/go-hashids"
 	twirp "github.com/thingful/twirp-policystore-go"
 
-	"github.com/thingful/iotpolicystore/pkg/config"
+	"github.com/DECODEproject/iotpolicystore/pkg/config"
 )
 
 const (

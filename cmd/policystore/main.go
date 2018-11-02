@@ -1,6 +1,6 @@
 package main
 
-import "github.com/thingful/iotpolicystore/pkg/tasks"
+import "github.com/DECODEproject/iotpolicystore/pkg/tasks"
 
 func main() {
 	tasks.Execute()

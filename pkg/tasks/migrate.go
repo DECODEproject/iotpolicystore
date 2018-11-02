@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/thingful/iotpolicystore/pkg/logger"
-	"github.com/thingful/iotpolicystore/pkg/postgres"
-	"github.com/thingful/iotpolicystore/pkg/version"
+	"github.com/DECODEproject/iotpolicystore/pkg/logger"
+	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
+	"github.com/DECODEproject/iotpolicystore/pkg/version"
 )
 
 var migrateCmd = &cobra.Command{

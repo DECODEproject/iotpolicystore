@@ -17,11 +17,11 @@ import (
 	goji "goji.io"
 	"goji.io/pat"
 
-	"github.com/thingful/iotpolicystore/pkg/config"
-	"github.com/thingful/iotpolicystore/pkg/middleware"
-	"github.com/thingful/iotpolicystore/pkg/postgres"
-	"github.com/thingful/iotpolicystore/pkg/rpc"
-	"github.com/thingful/iotpolicystore/pkg/version"
+	"github.com/DECODEproject/iotpolicystore/pkg/config"
+	"github.com/DECODEproject/iotpolicystore/pkg/middleware"
+	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
+	"github.com/DECODEproject/iotpolicystore/pkg/rpc"
+	"github.com/DECODEproject/iotpolicystore/pkg/version"
 )
 
 var (
