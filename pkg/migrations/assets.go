@@ -85,7 +85,7 @@ func _20181009155147_add_policy_tableDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20181009155147_add_policy_table.down.sql", size: 38, mode: os.FileMode(420), modTime: time.Unix(1539100797, 0)}
+	info := bindataFileInfo{name: "20181009155147_add_policy_table.down.sql", size: 38, mode: os.FileMode(420), modTime: time.Unix(1541168694, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xca, 0xcd, 0x26, 0xf6, 0x69, 0xe7, 0x14, 0x6, 0x4f, 0xc6, 0x27, 0x96, 0x99, 0x7d, 0x34, 0xb0, 0xcb, 0xd0, 0xb4, 0xb2, 0x61, 0x8c, 0x2a, 0xf7, 0xb2, 0xb1, 0x53, 0xaa, 0x6e, 0xe9, 0x29, 0x68}}
 	return a, nil
 }
@@ -105,7 +105,7 @@ func _20181009155147_add_policy_tableUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20181009155147_add_policy_table.up.sql", size: 341, mode: os.FileMode(420), modTime: time.Unix(1539188091, 0)}
+	info := bindataFileInfo{name: "20181009155147_add_policy_table.up.sql", size: 341, mode: os.FileMode(420), modTime: time.Unix(1541168694, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xd5, 0x3, 0x95, 0x32, 0x6f, 0xea, 0xfc, 0x6a, 0xb4, 0x63, 0x9b, 0x6f, 0x2e, 0xa0, 0xe, 0xca, 0x89, 0x6d, 0xfd, 0x4b, 0x21, 0x40, 0x68, 0x80, 0xdc, 0xb2, 0xfa, 0x21, 0x1a, 0x6f, 0x3f, 0x9a}}
 	return a, nil
 }
