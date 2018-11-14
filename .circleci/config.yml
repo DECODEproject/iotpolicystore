@@ -1,0 +1,43 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version
+      - image: circleci/golang:1.11
+      - image: circleci/postgres:9.6-alpine
+        environment:
+          POSTGRES_USER: iotpolicystore
+          POSTGRES_DB: iotpolicystore_test
+
+    working_directory: /go/src/github.com/DECODEproject/iotpolicystore
+
+    environment:
+      TEST_RESULTS: /tmp/test-results
+
+    steps:
+      - checkout
+
+      - run: mkdir -p $TEST_RESULTS
+
+      - run:
+          name: Waiting for Postgres to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgres && exit 1
+
+      - run:
+          name: Run tests
+          environment:
+            POLICYSTORE_DATABASE_URL: "postgres://iotpolicystore@localhost:5432/iotstore_test?sslmode=disable"
+          command: |
+            go test -v -installsuffix "static" -coverprofile=$TEST_RESULTS/coverage.out -timeout 30s -p 1 ./pkg/...
+            go tool cover -html=$TEST_RESULTS/coverage.out -o $TEST_RESULTS/coverage.html
+            go tool cover -func=$TEST_RESULTS/coverage.out
