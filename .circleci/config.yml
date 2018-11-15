@@ -36,7 +36,7 @@ jobs:
       - run:
           name: Run tests
           environment:
-            POLICYSTORE_DATABASE_URL: "postgres://iotpolicystore@localhost:5432/iotstore_test?sslmode=disable"
+            POLICYSTORE_DATABASE_URL: "postgres://iotpolicystore@localhost:5432/iotpolicystore_test?sslmode=disable"
           command: |
             go test -v -installsuffix "static" -coverprofile=$TEST_RESULTS/coverage.out -timeout 30s -p 1 ./pkg/...
             go tool cover -html=$TEST_RESULTS/coverage.out -o $TEST_RESULTS/coverage.html
