@@ -78,13 +78,13 @@
   version = "1.2.2"
 
 [[constraint]]
-  name = "github.com/google/uuid"
-  version = "1.0.0"
-
-[[constraint]]
   branch = "master"
   name = "github.com/joneskoo/twirp-serverhook-prometheus"
 
 [[constraint]]
   name = "github.com/rs/cors"
   version = "1.6.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/DECODEproject/iotcommon"

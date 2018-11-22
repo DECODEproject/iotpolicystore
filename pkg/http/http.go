@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/DECODEproject/iotcommon/middleware"
 	kitlog "github.com/go-kit/kit/log"
 	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
@@ -18,7 +19,6 @@ import (
 	"goji.io/pat"
 
 	"github.com/DECODEproject/iotpolicystore/pkg/config"
-	"github.com/DECODEproject/iotpolicystore/pkg/middleware"
 	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
 	"github.com/DECODEproject/iotpolicystore/pkg/rpc"
 	"github.com/DECODEproject/iotpolicystore/pkg/version"
@@ -49,6 +49,21 @@ type Server struct {
 	keyFile  string
 }
 
+var (
+	buildInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "decode",
+			Subsystem: "policystore",
+			Name:      "build_info",
+			Help:      "Information about the current build of the service",
+		}, []string{"name", "version", "build_date"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(buildInfo)
+}
+
 // Startable is an interface for a component that can be started.
 type Startable interface {
 	Start() error
@@ -61,6 +76,8 @@ type Stoppable interface {
 
 // NewServer returns a new simple HTTP server.
 func NewServer(config *config.Config) *Server {
+	buildInfo.WithLabelValues(version.BinaryName, version.Version, version.BuildDate).Set(1)
+
 	db := postgres.NewDB(config)
 
 	store := rpc.NewPolicyStore(config, db)
@@ -82,6 +99,9 @@ func NewServer(config *config.Config) *Server {
 
 	mux.Use(middleware.RequestIDMiddleware)
 	mux.Use(c.Handler)
+
+	metricsMiddleware := middleware.MetricsMiddleware("decode", "policystore")
+	mux.Use(metricsMiddleware)
 
 	// create our http.Server instance
 	srv := &http.Server{
