@@ -19,35 +19,11 @@ import (
 	"goji.io/pat"
 
 	"github.com/DECODEproject/iotpolicystore/pkg/config"
+	"github.com/DECODEproject/iotpolicystore/pkg/metrics"
 	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
 	"github.com/DECODEproject/iotpolicystore/pkg/rpc"
 	"github.com/DECODEproject/iotpolicystore/pkg/version"
 )
-
-var (
-	versionGauge = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "version",
-			Help: "the binary version",
-			ConstLabels: map[string]string{
-				"version": version.Version,
-			},
-		},
-	)
-)
-
-func init() {
-	prometheus.MustRegister(versionGauge)
-}
-
-// Server is our custom server type.
-type Server struct {
-	srv      *http.Server
-	logger   kitlog.Logger
-	store    ps.PolicyStore
-	certFile string
-	keyFile  string
-}
 
 var (
 	buildInfo = prometheus.NewGaugeVec(
@@ -61,7 +37,16 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(buildInfo)
+	metrics.MustRegister(buildInfo)
+}
+
+// Server is our custom server type.
+type Server struct {
+	srv      *http.Server
+	logger   kitlog.Logger
+	store    ps.PolicyStore
+	certFile string
+	keyFile  string
 }
 
 // Startable is an interface for a component that can be started.
