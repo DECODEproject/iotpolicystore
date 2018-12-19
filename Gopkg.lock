@@ -346,6 +346,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:e5583898a989195137730e572a4d9fedfbea4982bc7ca8dd66ac0cb53c67ea70"
+  name = "github.com/thingful/retryable-registry-prometheus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "0538f7de5ba9348c2cdd8b45776469782447f905"
+
+[[projects]]
+  branch = "master"
   digest = "1:928ed19558717325b3b1ca4db251a0154b5e1014f8603dac426709c01cae1056"
   name = "github.com/thingful/twirp-policystore-go"
   packages = ["."]
@@ -431,6 +439,7 @@
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/suite",
+    "github.com/thingful/retryable-registry-prometheus",
     "github.com/thingful/twirp-policystore-go",
     "github.com/twitchtv/twirp",
     "goji.io",
