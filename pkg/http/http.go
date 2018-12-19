@@ -13,13 +13,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
+	registry "github.com/thingful/retryable-registry-prometheus"
 	policystore "github.com/thingful/twirp-policystore-go"
 	ps "github.com/thingful/twirp-policystore-go"
 	goji "goji.io"
 	"goji.io/pat"
 
 	"github.com/DECODEproject/iotpolicystore/pkg/config"
-	"github.com/DECODEproject/iotpolicystore/pkg/metrics"
 	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
 	"github.com/DECODEproject/iotpolicystore/pkg/rpc"
 	"github.com/DECODEproject/iotpolicystore/pkg/version"
@@ -37,7 +37,7 @@ var (
 )
 
 func init() {
-	metrics.MustRegister(buildInfo)
+	registry.MustRegister(buildInfo)
 }
 
 // Server is our custom server type.
@@ -66,7 +66,7 @@ func NewServer(config *config.Config) *Server {
 	db := postgres.NewDB(config)
 
 	store := rpc.NewPolicyStore(config, db)
-	hooks := twrpprom.NewServerHooks(nil)
+	hooks := twrpprom.NewServerHooks(registry.DefaultRegisterer)
 
 	twirpHandler := policystore.NewPolicyStoreServer(store, hooks)
 
