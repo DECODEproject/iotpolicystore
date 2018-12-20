@@ -13,7 +13,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
-	registry "github.com/thingful/retryable-registry-prometheus"
 	policystore "github.com/thingful/twirp-policystore-go"
 	ps "github.com/thingful/twirp-policystore-go"
 	goji "goji.io"
@@ -34,11 +33,9 @@ var (
 			Help:      "Information about the current build of the service",
 		}, []string{"name", "version", "build_date"},
 	)
-)
 
-func init() {
-	registry.MustRegister(buildInfo)
-}
+	registry prometheus.Registerer
+)
 
 // Server is our custom server type.
 type Server struct {
@@ -63,10 +60,13 @@ type Stoppable interface {
 func NewServer(config *config.Config) *Server {
 	buildInfo.WithLabelValues(version.BinaryName, version.Version, version.BuildDate).Set(1)
 
+	registry = prometheus.NewRegistry()
+	registry.MustRegister(buildInfo)
+
 	db := postgres.NewDB(config)
 
 	store := rpc.NewPolicyStore(config, db)
-	hooks := twrpprom.NewServerHooks(registry.DefaultRegisterer)
+	hooks := twrpprom.NewServerHooks(registry)
 
 	twirpHandler := policystore.NewPolicyStoreServer(store, hooks)
 
