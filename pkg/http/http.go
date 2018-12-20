@@ -33,8 +33,6 @@ var (
 			Help:      "Information about the current build of the service",
 		}, []string{"name", "version", "build_date"},
 	)
-
-	registry prometheus.Registerer
 )
 
 // Server is our custom server type.
@@ -60,7 +58,7 @@ type Stoppable interface {
 func NewServer(config *config.Config) *Server {
 	buildInfo.WithLabelValues(version.BinaryName, version.Version, version.BuildDate).Set(1)
 
-	registry = prometheus.NewRegistry()
+	registry := prometheus.NewRegistry()
 	registry.MustRegister(buildInfo)
 
 	db := postgres.NewDB(config)
