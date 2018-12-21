@@ -83,7 +83,7 @@ func NewServer(config *config.Config) *Server {
 	mux.Use(middleware.RequestIDMiddleware)
 	mux.Use(c.Handler)
 
-	metricsMiddleware := middleware.MetricsMiddleware("decode", "policystore")
+	metricsMiddleware := middleware.MetricsMiddleware("decode", "policystore", registry)
 	mux.Use(metricsMiddleware)
 
 	// create our http.Server instance
