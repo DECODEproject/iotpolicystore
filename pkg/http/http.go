@@ -13,6 +13,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
+	registry "github.com/thingful/retryable-registry-prometheus"
 	policystore "github.com/thingful/twirp-policystore-go"
 	ps "github.com/thingful/twirp-policystore-go"
 	goji "goji.io"
@@ -34,6 +35,10 @@ var (
 		}, []string{"name", "version", "build_date"},
 	)
 )
+
+func init() {
+	registry.MustRegister(buildInfo)
+}
 
 // Server is our custom server type.
 type Server struct {
@@ -58,13 +63,10 @@ type Stoppable interface {
 func NewServer(config *config.Config) *Server {
 	buildInfo.WithLabelValues(version.BinaryName, version.Version, version.BuildDate).Set(1)
 
-	registry := prometheus.NewRegistry()
-	registry.MustRegister(buildInfo)
-
 	db := postgres.NewDB(config)
 
 	store := rpc.NewPolicyStore(config, db)
-	hooks := twrpprom.NewServerHooks(registry)
+	hooks := twrpprom.NewServerHooks(registry.DefaultRegisterer)
 
 	twirpHandler := policystore.NewPolicyStoreServer(store, hooks)
 
@@ -83,7 +85,7 @@ func NewServer(config *config.Config) *Server {
 	mux.Use(middleware.RequestIDMiddleware)
 	mux.Use(c.Handler)
 
-	metricsMiddleware := middleware.MetricsMiddleware("decode", "policystore", registry)
+	metricsMiddleware := middleware.MetricsMiddleware("decode", "policystore", registry.DefaultRegisterer)
 	mux.Use(metricsMiddleware)
 
 	// create our http.Server instance
