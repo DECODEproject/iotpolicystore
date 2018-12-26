@@ -53,6 +53,10 @@ func (p *policystore) Stop() error {
 // in our Twirp interface. This method is the mechanism by which a caller can
 // write a new entitlement policy into the policystore.
 func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.CreateEntitlementPolicyRequest) (*ps.CreateEntitlementPolicyResponse, error) {
+	if p.verbose {
+		p.logger.Log("publicKey", req.PublicKey, "label", req.Label, "msg", "createPolicy")
+	}
+
 	// validate request
 	if req.PublicKey == "" {
 		return nil, twirp.RequiredArgumentError("public_key")
@@ -79,6 +83,10 @@ func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.Creat
 // in our Twirp interface. This method is the mechanism by which a caller can
 // delete a previously created entitlement policy from the datastore.
 func (p *policystore) DeleteEntitlementPolicy(ctx context.Context, req *ps.DeleteEntitlementPolicyRequest) (*ps.DeleteEntitlementPolicyResponse, error) {
+	if p.verbose {
+		p.logger.Log("policyID", req.PolicyId, "msg", "deletePolicy")
+	}
+
 	if req.PolicyId == "" {
 		return nil, twirp.RequiredArgumentError("policy_id")
 	}
@@ -100,6 +108,10 @@ func (p *policystore) DeleteEntitlementPolicy(ctx context.Context, req *ps.Delet
 // obtain a list of all registered policies suitable for presenting to an end
 // user via some sort of UI component.
 func (p *policystore) ListEntitlementPolicies(ctx context.Context, req *ps.ListEntitlementPoliciesRequest) (*ps.ListEntitlementPoliciesResponse, error) {
+	if p.verbose {
+		p.logger.Log("msg", "listPolicies")
+	}
+
 	policies, err := p.db.ListPolicies()
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
