@@ -92,3 +92,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/thingful/retryable-registry-prometheus"
+
+[[constraint]]
+  name = "github.com/getsentry/raven-go"
+  version = "0.2.0"
