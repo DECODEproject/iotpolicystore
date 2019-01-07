@@ -3,6 +3,7 @@ package rpc
 import (
 	"context"
 
+	raven "github.com/getsentry/raven-go"
 	"github.com/twitchtv/twirp"
 
 	kitlog "github.com/go-kit/kit/log"
@@ -73,6 +74,7 @@ func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.Creat
 
 	resp, err := p.db.CreatePolicy(req)
 	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "createEntitlementPolicy"})
 		return nil, twirp.InternalErrorWith(err)
 	}
 
@@ -97,6 +99,7 @@ func (p *policystore) DeleteEntitlementPolicy(ctx context.Context, req *ps.Delet
 
 	err := p.db.DeletePolicy(req)
 	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "createEntitlementPolicy"})
 		return nil, twirp.InternalErrorWith(err)
 	}
 
@@ -114,6 +117,7 @@ func (p *policystore) ListEntitlementPolicies(ctx context.Context, req *ps.ListE
 
 	policies, err := p.db.ListPolicies()
 	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "createEntitlementPolicy"})
 		return nil, twirp.InternalErrorWith(err)
 	}
 

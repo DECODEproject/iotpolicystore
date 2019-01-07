@@ -3,9 +3,9 @@ package tasks
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
+	raven "github.com/getsentry/raven-go"
 	"github.com/lestrrat-go/backoff"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -13,6 +13,7 @@ import (
 	"github.com/DECODEproject/iotpolicystore/pkg/config"
 	"github.com/DECODEproject/iotpolicystore/pkg/http"
 	"github.com/DECODEproject/iotpolicystore/pkg/logger"
+	"github.com/DECODEproject/iotpolicystore/pkg/version"
 )
 
 var serverCmd = &cobra.Command{
@@ -24,25 +25,23 @@ This server listens on the specified port for incoming Protocol Buffer or
 JSON RPC messages, with all data being persisted to the attached PostgreSQL
 database.
 
-The server requires the following environment variables to be set in order to
-operate:
-
-* $POLICYSTORE_DATABASE_URL - connection string for the database
-* $POLICYSTORE_ENCRYPTION_PASSWORD - password used to encrypt tokens in the db
-* $POLICYSTORE_HASHID_SALT - salt value used when hashing ids
-`,
+Configuration values can be provided either by flags, or generally by
+environment variables. If a flag is named: --example-flag, then it will also be
+able to be supplied via an environment variable: $POLICYSTORE_EXAMPLE_FLAG`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// has a default so will always be set
 		addr := viper.GetString("addr")
+		if addr == "" {
+			return errors.New("Must supply an address to bind to")
+		}
 
 		connStr := viper.GetString("database-url")
 		if connStr == "" {
-			return missingConfig("database connection url", "$POLICYSTORE_DATABASE_URL")
+			return errors.New("Must supply a database connection string")
 		}
 
 		encryptionPassword := viper.GetString("encryption-password")
 		if encryptionPassword == "" {
-			return missingConfig("database encryption password", "$POLICYSTORE_ENCRYPTION_PASSWORD")
+			return errors.New("Must supply a database encryption password")
 		}
 
 		hashidLength := viper.GetInt("hashid-length")
@@ -52,12 +51,11 @@ operate:
 
 		hashidSalt := viper.GetString("hashid-salt")
 		if hashidSalt == "" {
-			return missingConfig("hashid salt", "$POLICYSTORE_HASHID_SALT")
+			return errors.New("Must supply a hashid salt value")
 		}
 
 		certFile := viper.GetString("cert-file")
 		keyFile := viper.GetString("key-file")
-
 		verbose := viper.GetBool("verbose")
 
 		config := &config.Config{
@@ -88,18 +86,22 @@ operate:
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
-	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8082", "Specify the address to which the server binds. May also be passed via the environment as $POLICYSTORE_ADDR")
-	serverCmd.Flags().Int("hashid-length", 8, "Minimum length of generated id strings. May also be passed via the environment as $POLICYSTORE_HASHID_LENGTH")
-	serverCmd.Flags().StringP("cert-file", "c", "", "The path to a TLS certificate file to enable TLS on the server (or $POLICYSTORE_CERT_FILE env variable)")
-	serverCmd.Flags().StringP("key-file", "k", "", "The path to a TLS private key file to enable TLS on the server (or $POLICYSTORE_KEY_FILE env variable)")
+	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8082", "address to which the server binds")
+	serverCmd.Flags().StringP("cert-file", "c", "", "path to a TLS certificate file to enable TLS on the server")
+	serverCmd.Flags().StringP("database-url", "d", "", "URL at which Postgres is listening (e.g. postgres://user:password@host:5432/dbname?sslmode=enable)")
+	serverCmd.Flags().StringP("key-file", "k", "", "path to a TLS private key file to enable TLS on the server")
+	serverCmd.Flags().String("encryption-password", "", "password used to encrypt secret tokens we write to the database")
+	serverCmd.Flags().IntP("hashid-length", "l", 8, "minimum length of generated id strings for policies")
+	serverCmd.Flags().String("hashid-salt", "", "salt value used when generating IDs for policies")
 
 	viper.BindPFlag("addr", serverCmd.Flags().Lookup("addr"))
-	viper.BindPFlag("hashid-length", serverCmd.Flags().Lookup("hashid-length"))
 	viper.BindPFlag("cert-file", serverCmd.Flags().Lookup("cert-file"))
+	viper.BindPFlag("database-url", serverCmd.Flags().Lookup("database-url"))
 	viper.BindPFlag("key-file", serverCmd.Flags().Lookup("key-file"))
-}
+	viper.BindPFlag("encryption-password", serverCmd.Flags().Lookup("encryption-password"))
+	viper.BindPFlag("hashid-length", serverCmd.Flags().Lookup("hashid-length"))
+	viper.BindPFlag("hashid-salt", serverCmd.Flags().Lookup("hashid-salt"))
 
-// missingConfig builds an error for a missing required config value.
-func missingConfig(name, envVarName string) error {
-	return fmt.Errorf("Missing required config value: %s. Must be passed via the `%s` environment variable", name, envVarName)
+	raven.SetRelease(version.Version)
+	raven.SetTagsContext(map[string]string{"component": "policystore"})
 }

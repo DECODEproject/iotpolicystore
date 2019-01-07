@@ -1,10 +1,10 @@
 package tasks
 
 import (
-	"fmt"
-	"os"
+	"log"
 	"strings"
 
+	raven "github.com/getsentry/raven-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -31,8 +31,8 @@ Encryption is provided by other components within the pilot.`,
 // Execute is our main entry point - called by main.go in cmd/policystore
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		raven.CaptureErrorAndWait(err, nil)
+		log.Fatal(err)
 	}
 }
 
