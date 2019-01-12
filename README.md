@@ -1,6 +1,8 @@
 # iotpolicystore
 
-Implementation of the policy store component for the DECODE IoT pilot.
+Implementation of the policy store component for the [DECODE](https://decodeproject.eu/) IoT pilot.
+
+![DECODE](https://decodeproject.eu/sites/default/files/favicon_13.png)
 
 ## Building
 
@@ -43,7 +45,6 @@ services:
         image: postgres:10-alpine
         ports:
           - "5432"
-        restart: always
         volumes:
           - postgres_vol: /var/lib/postgresql/data
         environment:
@@ -52,10 +53,9 @@ services:
           - POSTGRES_DB=postgres
 
     policystore:
-        image: thingful/policystore-amd64:v0.0.1
+        image: thingful/policystore-amd64:v0.1.0
         ports:
           - "8082:8082"
-        restart: always
         environment:
           - POLICYSTORE_DATABASE_URL=postgres://decode:password@postgres:5432/postgres?sslmode=disable
           - POLICYSTORE_ENCRYPTION_PASSWORD=secret-password-changeme
