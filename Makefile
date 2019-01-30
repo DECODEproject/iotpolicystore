@@ -7,7 +7,7 @@ BIN := policystore
 PKG := github.com/DECODEproject/iotpolicystore
 
 # Docker Hub ID to which docker images should be pushed
-REGISTRY ?= thingful
+REGISTRY ?= decodeproject
 
 # Default architecture to build
 ARCH ?= amd64
