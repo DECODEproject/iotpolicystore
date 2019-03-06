@@ -3,14 +3,12 @@ package rpc
 import (
 	"context"
 
-	raven "github.com/getsentry/raven-go"
-	"github.com/twitchtv/twirp"
-
-	kitlog "github.com/go-kit/kit/log"
-	ps "github.com/thingful/twirp-policystore-go"
-
 	"github.com/DECODEproject/iotpolicystore/pkg/config"
 	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
+	raven "github.com/getsentry/raven-go"
+	kitlog "github.com/go-kit/kit/log"
+	ps "github.com/thingful/twirp-policystore-go"
+	"github.com/twitchtv/twirp"
 )
 
 // policystore is the type that we use to implement the PolicyStore interface
