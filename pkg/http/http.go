@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/DECODEproject/iotcommon/middleware"
@@ -18,6 +19,7 @@ import (
 	ps "github.com/thingful/twirp-policystore-go"
 	goji "goji.io"
 	"goji.io/pat"
+	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/DECODEproject/iotpolicystore/pkg/config"
 	"github.com/DECODEproject/iotpolicystore/pkg/postgres"
@@ -42,11 +44,11 @@ func init() {
 
 // Server is our custom server type.
 type Server struct {
-	srv      *http.Server
-	logger   kitlog.Logger
-	store    ps.PolicyStore
-	certFile string
-	keyFile  string
+	srv     *http.Server
+	logger  kitlog.Logger
+	db      *postgres.DB
+	store   ps.PolicyStore
+	domains []string
 }
 
 // Startable is an interface for a component that can be started.
@@ -96,11 +98,11 @@ func NewServer(config *config.Config) *Server {
 
 	// return the instantiated server
 	return &Server{
-		srv:      srv,
-		logger:   kitlog.With(config.Logger, "module", "http"),
-		store:    store,
-		certFile: config.CertFile,
-		keyFile:  config.KeyFile,
+		srv:     srv,
+		logger:  kitlog.With(config.Logger, "module", "http"),
+		db:      db,
+		store:   store,
+		domains: config.Domains,
 	}
 }
 
@@ -120,12 +122,19 @@ func (s *Server) Start() error {
 			"msg", "starting server",
 			"addr", s.srv.Addr,
 			"twirpPrefix", policystore.PolicyStorePathPrefix,
-			"certFile", s.certFile,
-			"keyFile", s.keyFile,
+			"domains", strings.Join(s.domains, ","),
 		)
 
 		if s.isTLSEnabled() {
-			if err := s.srv.ListenAndServeTLS(s.certFile, s.keyFile); err != nil {
+			m := &autocert.Manager{
+				Cache:      s.db,
+				Prompt:     autocert.AcceptTOS,
+				HostPolicy: autocert.HostWhitelist(s.domains...),
+			}
+
+			s.srv.TLSConfig = m.TLSConfig()
+
+			if err := s.srv.ListenAndServeTLS("", ""); err != nil {
 				s.logger.Log("err", err)
 				os.Exit(1)
 			}
@@ -160,7 +169,7 @@ func (s *Server) Stop() error {
 	return s.srv.Shutdown(ctx)
 }
 
-// isTLSEnabled returns true if we have a non empty cert and key file
+// isTLSEnabled returns true if we have a non empty domains list
 func (s *Server) isTLSEnabled() bool {
-	return s.certFile != "" && s.keyFile != ""
+	return len(s.domains) > 0
 }

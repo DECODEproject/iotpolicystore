@@ -1,14 +1,18 @@
 package postgres
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 
+	raven "github.com/getsentry/raven-go"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/jmoiron/sqlx"
 	"github.com/jmoiron/sqlx/types"
 	"github.com/pkg/errors"
 	"github.com/speps/go-hashids"
 	twirp "github.com/thingful/twirp-policystore-go"
+	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/DECODEproject/iotpolicystore/pkg/config"
 )
@@ -261,4 +265,87 @@ func (d *DB) Ping() error {
 		return err
 	}
 	return nil
+}
+
+// certificate is an internal type used for reading/writing letsencrypt
+// certificates to the DB
+type certificate struct {
+	Key         string `db:"key"`
+	Certificate []byte `db:"certificate"`
+}
+
+// Get is our implementation of the autocert.Cache interface for reading
+// certificates from some underlying storage. Here we attempt to read
+// certificates to Postgres.
+func (d *DB) Get(ctx context.Context, key string) ([]byte, error) {
+	query := `SELECT certificate FROM certificates WHERE key = $1`
+
+	var cert []byte
+	err := d.DB.Get(&cert, query, key)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, autocert.ErrCacheMiss
+		}
+		raven.CaptureError(err, map[string]string{"operation": "getCertificate"})
+		return nil, errors.Wrap(err, "failed to read certificate from DB")
+	}
+
+	return cert, nil
+}
+
+// Put is our implementation of the autocert.Cache interface for writing
+// certificates from underlying storage, in this case Postgres.
+func (d *DB) Put(ctx context.Context, key string, data []byte) error {
+	query := `INSERT INTO certificates (key, certificate)
+		VALUES (:key, :certificate)
+	ON CONFLICT (key)
+	DO UPDATE SET certificate = EXCLUDED.certificate`
+
+	mapArgs := map[string]interface{}{
+		"key":         key,
+		"certificate": data,
+	}
+
+	tx, err := d.DB.Beginx()
+	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "putCertificate"})
+		return errors.Wrap(err, "failed to begin transaction")
+	}
+
+	query, args, err := tx.BindNamed(query, mapArgs)
+	if err != nil {
+		tx.Rollback()
+		raven.CaptureError(err, map[string]string{"operation": "putCertificate"})
+		return errors.Wrap(err, "failed to bind named parameters")
+	}
+
+	_, err = tx.Exec(query, args...)
+	if err != nil {
+		tx.Rollback()
+		raven.CaptureError(err, map[string]string{"operation": "putCertificate"})
+		return errors.Wrap(err, "failed to upsert certficate")
+	}
+
+	return tx.Commit()
+}
+
+// Delete is the final method of the autocert.Cache interface that allows the
+// caller to delete a certificate from the underlying store.
+func (d *DB) Delete(ctx context.Context, key string) error {
+	query := `DELETE FROM certificates WHERE key = $1`
+
+	tx, err := d.DB.Beginx()
+	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "deleteCertifcate"})
+		return errors.Wrap(err, "failed to begin transaction")
+	}
+
+	_, err = tx.Exec(query, key)
+	if err != nil {
+		tx.Rollback()
+		raven.CaptureError(err, map[string]string{"operation": "deleteCertificate"})
+		return errors.Wrap(err, "faield to delete certificate")
+	}
+
+	return tx.Commit()
 }

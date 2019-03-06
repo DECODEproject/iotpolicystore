@@ -54,19 +54,14 @@ able to be supplied via an environment variable: $POLICYSTORE_EXAMPLE_FLAG`,
 			return errors.New("Must supply a hashid salt value")
 		}
 
-		certFile := viper.GetString("cert-file")
-		keyFile := viper.GetString("key-file")
-		verbose := viper.GetBool("verbose")
-
 		config := &config.Config{
 			ServerAddr:         addr,
 			ConnStr:            connStr,
 			EncryptionPassword: encryptionPassword,
 			HashidLength:       hashidLength,
 			HashidSalt:         hashidSalt,
-			Verbose:            verbose,
-			CertFile:           certFile,
-			KeyFile:            keyFile,
+			Verbose:            viper.GetBool("verbose"),
+			Domains:            viper.GetStringSlice("domains"),
 			Logger:             logger.NewLogger(),
 		}
 
@@ -86,18 +81,16 @@ able to be supplied via an environment variable: $POLICYSTORE_EXAMPLE_FLAG`,
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
-	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8082", "address to which the server binds")
-	serverCmd.Flags().StringP("cert-file", "c", "", "path to a TLS certificate file to enable TLS on the server")
+	serverCmd.Flags().StringP("addr", "a", ":8082", "address to which the server binds")
 	serverCmd.Flags().StringP("database-url", "d", "", "URL at which Postgres is listening (e.g. postgres://user:password@host:5432/dbname?sslmode=enable)")
-	serverCmd.Flags().StringP("key-file", "k", "", "path to a TLS private key file to enable TLS on the server")
+	serverCmd.Flags().StringSlice("domains", []string{}, "Comma separate list of domains for which we obtain TLS certificates")
 	serverCmd.Flags().String("encryption-password", "", "password used to encrypt secret tokens we write to the database")
 	serverCmd.Flags().IntP("hashid-length", "l", 8, "minimum length of generated id strings for policies")
 	serverCmd.Flags().String("hashid-salt", "", "salt value used when generating IDs for policies")
 
 	viper.BindPFlag("addr", serverCmd.Flags().Lookup("addr"))
-	viper.BindPFlag("cert-file", serverCmd.Flags().Lookup("cert-file"))
 	viper.BindPFlag("database-url", serverCmd.Flags().Lookup("database-url"))
-	viper.BindPFlag("key-file", serverCmd.Flags().Lookup("key-file"))
+	viper.BindPFlag("domains", serverCmd.Flags().Lookup("domains"))
 	viper.BindPFlag("encryption-password", serverCmd.Flags().Lookup("encryption-password"))
 	viper.BindPFlag("hashid-length", serverCmd.Flags().Lookup("hashid-length"))
 	viper.BindPFlag("hashid-salt", serverCmd.Flags().Lookup("hashid-salt"))
