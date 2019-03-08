@@ -10,6 +10,22 @@
   revision = "b1c06887102bb6a8b0ad4af40b7476ed07301067"
 
 [[projects]]
+  digest = "1:a2682518d905d662d984ef9959984ef87cecb777d379bfa9d9fe40e78069b3e4"
+  name = "github.com/PuerkitoBio/purell"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "44968752391892e1b0d0b821ee79e9a85fa13049"
+  version = "v1.1.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:c739832d67eb1e9cc478a19cc1a1ccd78df0397bf8a32978b759152e205f644b"
+  name = "github.com/PuerkitoBio/urlesc"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "de5bf2ad457846296e2031421a34e2568e304e35"
+
+[[projects]]
   branch = "master"
   digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
   name = "github.com/beorn7/perks"
@@ -106,6 +122,14 @@
   pruneopts = "UT"
   revision = "0cd6bf5da1e1c83f8b45653022c74f71af0538a4"
   version = "v1.1.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:d3d93087df8a02215b306cd04357d3321833ce7a48452ebafce1165f2ddcde69"
+  name = "github.com/goware/urlx"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "4fc201f7f862af2abfaca0c2904be15ea0037a34"
 
 [[projects]]
   digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
@@ -371,6 +395,14 @@
   revision = "0538f7de5ba9348c2cdd8b45776469782447f905"
 
 [[projects]]
+  digest = "1:148e33d00fb649ecb53e2c0b219cfedf7b30d39ea821c1ca356a6f0f2d77c539"
+  name = "github.com/thingful/simular"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f1cf2b0e81fea4a3a15e2007e083dba688f8f11f"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:8aa53c8698cc5a10c991f87874fab46f5e12ab3585f705778657a0064a96b4c6"
   name = "github.com/thingful/twirp-policystore-go"
   packages = ["."]
@@ -416,6 +448,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:82491a0790e0945762096c875e2e14932a5d7b37a7ce3e83ef3b50437a71e09a"
+  name = "golang.org/x/net"
+  packages = ["idna"]
+  pruneopts = "UT"
+  revision = "16b79f2e4e95ea23b2bf9903c9809ff7b013ce85"
+
+[[projects]]
+  branch = "master"
   digest = "1:7ea2a5bdb9273298b19f6c14d01c11f592ed57bd6a658f7c0ddf9927011cc763"
   name = "golang.org/x/sys"
   packages = ["unix"]
@@ -423,15 +463,24 @@
   revision = "584f3b12f43e1e55248c90e84804777009eed0a4"
 
 [[projects]]
-  digest = "1:8029e9743749d4be5bc9f7d42ea1659471767860f0cdc34d37c3111bd308a295"
+  digest = "1:0c56024909189aee3364b7f21a95a27459f718aa7c199a5c111c36cfffd9eaef"
   name = "golang.org/x/text"
   packages = [
+    "collate",
+    "collate/build",
+    "internal/colltab",
     "internal/gen",
+    "internal/tag",
     "internal/triegen",
     "internal/ucd",
+    "language",
+    "secure/bidirule",
     "transform",
+    "unicode/bidi",
     "unicode/cldr",
     "unicode/norm",
+    "unicode/rangetable",
+    "width",
   ]
   pruneopts = "UT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
@@ -470,6 +519,7 @@
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/suite",
     "github.com/thingful/retryable-registry-prometheus",
+    "github.com/thingful/simular",
     "github.com/thingful/twirp-policystore-go",
     "github.com/twitchtv/twirp",
     "goji.io",
