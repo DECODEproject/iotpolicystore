@@ -62,19 +62,7 @@ func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.Creat
 	}
 
 	// validate request
-	if req.AuthorizableAttributeId == "" {
-		return nil, twirp.RequiredArgumentError("authorizable_attribute_id")
-	}
-
-	if req.CredentialIssuerEndpointUrl == "" {
-		return nil, twirp.RequiredArgumentError("credential_issuer_endpoint_url")
-	}
-
-	if req.Label == "" {
-		return nil, twirp.RequiredArgumentError("label")
-	}
-
-	err := validateOperations(req.Operations)
+	err := validateCreateRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -134,6 +122,29 @@ func (p *policystore) ListEntitlementPolicies(ctx context.Context, req *ps.ListE
 	return &ps.ListEntitlementPoliciesResponse{
 		Policies: policies,
 	}, nil
+}
+
+// validateCreateRequest validates required attributes on the incoming create
+// policy request
+func validateCreateRequest(req *ps.CreateEntitlementPolicyRequest) error {
+	if req.AuthorizableAttributeId == "" {
+		return twirp.RequiredArgumentError("authorizable_attribute_id")
+	}
+
+	if req.CredentialIssuerEndpointUrl == "" {
+		return twirp.RequiredArgumentError("credential_issuer_endpoint_url")
+	}
+
+	if req.Label == "" {
+		return twirp.RequiredArgumentError("label")
+	}
+
+	err := validateOperations(req.Operations)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // validateOperations validates the content of all operations

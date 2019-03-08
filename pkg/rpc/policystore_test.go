@@ -2,12 +2,14 @@ package rpc_test
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"testing"
 
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"github.com/thingful/simular"
 	twirp "github.com/thingful/twirp-policystore-go"
 
 	"github.com/DECODEproject/iotpolicystore/pkg/config"
@@ -20,6 +22,9 @@ type PolicyStoreSuite struct {
 	ps twirp.PolicyStore
 }
 
+// component is a little interface to allow us to call Start()/Stop() on the rpc
+// instance which we otherwise can treat as an implementation of the twirp
+// generated interface
 type component interface {
 	Start() error
 	Stop() error
@@ -35,6 +40,8 @@ func (s *PolicyStoreSuite) SetupTest() {
 		HashidSalt:         "hashid-salt",
 		EncryptionPassword: "password",
 		Logger:             logger,
+		ClientTimeout:      1,
+		DashboardURL:       "http://bcnnow.decodeproject.eu",
 	}
 
 	db := postgres.NewDB(config)
@@ -62,16 +69,30 @@ func (s *PolicyStoreSuite) TearDownTest() {
 }
 
 func (s *PolicyStoreSuite) TestRoundTrip() {
+	simular.Activate()
+	defer simular.DeactivateAndReset()
+
+	simular.RegisterStubRequests(
+		simular.NewStubRequest(
+			http.MethodPost,
+			"http://bcnnow.decodeproject.eu/community/create_encrypted",
+			simular.NewStringResponder(200, `{"id":"community_id","public_key": "community_key"}`),
+		),
+	)
+
 	req := &twirp.CreateEntitlementPolicyRequest{
-		PublicKey: "abc123",
-		Label:     "policy label",
+		Label: "policy label",
 		Operations: []*twirp.Operation{
 			&twirp.Operation{
 				SensorId: 2,
 				Action:   twirp.Operation_SHARE,
 			},
 		},
+		AuthorizableAttributeId:     "abc123",
+		CredentialIssuerEndpointUrl: "http://credential.com",
 	}
+
+	assert.NotNil(s.T(), req)
 
 	createResp, err := s.ps.CreateEntitlementPolicy(context.Background(), req)
 	assert.Nil(s.T(), err)
@@ -85,6 +106,8 @@ func (s *PolicyStoreSuite) TestRoundTrip() {
 	policy := listResp.Policies[0]
 	assert.Equal(s.T(), createResp.CommunityId, policy.CommunityId)
 	assert.Len(s.T(), policy.Operations, 1)
+	assert.Equal(s.T(), "abc123", policy.AuthorizableAttributeId)
+	assert.Equal(s.T(), "http://credential.com", policy.CredentialIssuerEndpointUrl)
 
 	operation := policy.Operations[0]
 	assert.Equal(s.T(), twirp.Operation_SHARE, operation.Action)
@@ -92,7 +115,7 @@ func (s *PolicyStoreSuite) TestRoundTrip() {
 
 	_, err = s.ps.DeleteEntitlementPolicy(context.Background(), &twirp.DeleteEntitlementPolicyRequest{
 		CommunityId: createResp.CommunityId,
-		Token:    createResp.Token,
+		Token:       createResp.Token,
 	})
 
 	assert.Nil(s.T(), err)
@@ -109,26 +132,38 @@ func (s *PolicyStoreSuite) TestInvalidCreateRequests() {
 		expectedError string
 	}{
 		{
-			label: "missing public_key",
+			label: "missing credential issuer url",
 			request: &twirp.CreateEntitlementPolicyRequest{
-				PublicKey: "",
-				Label:     "foo",
+				Label:                       "foo",
+				AuthorizableAttributeId:     "abc123",
+				CredentialIssuerEndpointUrl: "",
 			},
-			expectedError: "twirp error invalid_argument: public_key is required",
+			expectedError: "twirp error invalid_argument: credential_issuer_endpoint_url is required",
 		},
 		{
 			label: "missing label",
 			request: &twirp.CreateEntitlementPolicyRequest{
-				PublicKey: "abc123",
-				Label:     "",
+				Label:                       "",
+				AuthorizableAttributeId:     "abc123",
+				CredentialIssuerEndpointUrl: "http://credential.com",
 			},
 			expectedError: "twirp error invalid_argument: label is required",
 		},
 		{
+			label: "missing authorizable attribute id",
+			request: &twirp.CreateEntitlementPolicyRequest{
+				Label:                       "foo",
+				AuthorizableAttributeId:     "",
+				CredentialIssuerEndpointUrl: "http://credential.com",
+			},
+			expectedError: "twirp error invalid_argument: authorizable_attribute_id is required",
+		},
+		{
 			label: "bins for share",
 			request: &twirp.CreateEntitlementPolicyRequest{
-				PublicKey: "abc123",
-				Label:     "foobar",
+				Label:                       "foobar",
+				AuthorizableAttributeId:     "abc123",
+				CredentialIssuerEndpointUrl: "http://credential.com",
 				Operations: []*twirp.Operation{
 					&twirp.Operation{
 						SensorId: 2,
@@ -142,8 +177,9 @@ func (s *PolicyStoreSuite) TestInvalidCreateRequests() {
 		{
 			label: "interval for share",
 			request: &twirp.CreateEntitlementPolicyRequest{
-				PublicKey: "abc123",
-				Label:     "foobar",
+				Label:                       "foobar",
+				AuthorizableAttributeId:     "abc123",
+				CredentialIssuerEndpointUrl: "http://credential.com",
 				Operations: []*twirp.Operation{
 					&twirp.Operation{
 						SensorId: 2,
@@ -157,8 +193,9 @@ func (s *PolicyStoreSuite) TestInvalidCreateRequests() {
 		{
 			label: "no bins for bin",
 			request: &twirp.CreateEntitlementPolicyRequest{
-				PublicKey: "abc123",
-				Label:     "foobar",
+				Label:                       "foobar",
+				AuthorizableAttributeId:     "abc123",
+				CredentialIssuerEndpointUrl: "http://credential.com",
 				Operations: []*twirp.Operation{
 					&twirp.Operation{
 						SensorId: 2,
@@ -171,8 +208,9 @@ func (s *PolicyStoreSuite) TestInvalidCreateRequests() {
 		{
 			label: "interval for bins",
 			request: &twirp.CreateEntitlementPolicyRequest{
-				PublicKey: "abc123",
-				Label:     "foobar",
+				Label:                       "foobar",
+				AuthorizableAttributeId:     "abc123",
+				CredentialIssuerEndpointUrl: "http://credential.com",
 				Operations: []*twirp.Operation{
 					&twirp.Operation{
 						SensorId: 2,
@@ -187,8 +225,9 @@ func (s *PolicyStoreSuite) TestInvalidCreateRequests() {
 		{
 			label: "no interval for moving_avg",
 			request: &twirp.CreateEntitlementPolicyRequest{
-				PublicKey: "abc123",
-				Label:     "foobar",
+				Label:                       "foobar",
+				AuthorizableAttributeId:     "abc123",
+				CredentialIssuerEndpointUrl: "http://credential.com",
 				Operations: []*twirp.Operation{
 					&twirp.Operation{
 						SensorId: 2,
@@ -201,8 +240,9 @@ func (s *PolicyStoreSuite) TestInvalidCreateRequests() {
 		{
 			label: "bins for moving_avg",
 			request: &twirp.CreateEntitlementPolicyRequest{
-				PublicKey: "abc123",
-				Label:     "foobar",
+				Label:                       "foobar",
+				AuthorizableAttributeId:     "abc123",
+				CredentialIssuerEndpointUrl: "http://credential.com",
 				Operations: []*twirp.Operation{
 					&twirp.Operation{
 						SensorId: 2,
@@ -217,8 +257,9 @@ func (s *PolicyStoreSuite) TestInvalidCreateRequests() {
 		{
 			label: "unexpected action type",
 			request: &twirp.CreateEntitlementPolicyRequest{
-				PublicKey: "abc123",
-				Label:     "foobar",
+				Label:                       "foobar",
+				AuthorizableAttributeId:     "abc123",
+				CredentialIssuerEndpointUrl: "http://credential.com",
 				Operations: []*twirp.Operation{
 					&twirp.Operation{
 						SensorId: 2,
@@ -249,7 +290,7 @@ func (s *PolicyStoreSuite) TestInvalidDeleteRequest() {
 			label: "missing community_id",
 			request: &twirp.DeleteEntitlementPolicyRequest{
 				CommunityId: "",
-				Token:    "foobar",
+				Token:       "foobar",
 			},
 			expectedError: "twirp error invalid_argument: community_id is required",
 		},
@@ -257,7 +298,7 @@ func (s *PolicyStoreSuite) TestInvalidDeleteRequest() {
 			label: "missing token",
 			request: &twirp.DeleteEntitlementPolicyRequest{
 				CommunityId: "abc123",
-				Token:    "",
+				Token:       "",
 			},
 			expectedError: "twirp error invalid_argument: token is required",
 		},
@@ -265,7 +306,7 @@ func (s *PolicyStoreSuite) TestInvalidDeleteRequest() {
 			label: "invalid community_id",
 			request: &twirp.DeleteEntitlementPolicyRequest{
 				CommunityId: "abc123",
-				Token:    "foobar",
+				Token:       "foobar",
 			},
 			expectedError: "twirp error internal: failed to decode hashed id: mismatch between encode and decode: abc123 start xm14aAYw re-encoded. result: [39775]",
 		},
@@ -273,7 +314,7 @@ func (s *PolicyStoreSuite) TestInvalidDeleteRequest() {
 			label: "invalid community_id (double hashid)",
 			request: &twirp.DeleteEntitlementPolicyRequest{
 				CommunityId: "Vbg3HEbX",
-				Token:    "foobar",
+				Token:       "foobar",
 			},
 			expectedError: "twirp error internal: unexpected hashed ID",
 		},
@@ -281,7 +322,7 @@ func (s *PolicyStoreSuite) TestInvalidDeleteRequest() {
 			label: "missing resource",
 			request: &twirp.DeleteEntitlementPolicyRequest{
 				CommunityId: "xm14aAYw",
-				Token:    "foobar",
+				Token:       "foobar",
 			},
 			expectedError: "twirp error internal: no policies were deleted, either the policy id or token must be invalid",
 		},
