@@ -12,5 +12,7 @@ type Config struct {
 	HashidSalt         string
 	Verbose            bool
 	Domains            []string
+	DashboardURL       string
+	ClientTimeout      int
 	Logger             kitlog.Logger
 }
