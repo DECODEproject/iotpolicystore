@@ -15,6 +15,7 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/DECODEproject/iotpolicystore/pkg/config"
+	"github.com/DECODEproject/iotpolicystore/pkg/dashboard"
 )
 
 const (
@@ -35,6 +36,8 @@ type DB struct {
 
 	hashidData *hashids.HashIDData
 	hashid     *hashids.HashID
+
+	dashboardClient *dashboard.Client
 }
 
 // Open is a helper function that connects to the DB and returns an instantiated
@@ -61,6 +64,7 @@ func NewDB(config *config.Config) *DB {
 		verbose:            config.Verbose,
 		logger:             logger,
 		hashidData:         hd,
+		dashboardClient:    dashboard.NewClient(config),
 	}
 }
 
@@ -108,50 +112,89 @@ func (d *DB) Stop() error {
 // returns a response struct containing the new policies id and a token the
 // caller must keep secret.
 func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.CreateEntitlementPolicyResponse, error) {
-	// note the use of postgres native encryption to encrypt the token.
-	sql := `INSERT INTO policies
-    (public_key, label, token, operations)
-  VALUES (:public_key, :label, pgp_sym_encrypt(:token, :encryption_password), :operations)
-	RETURNING id`
-
+	// generate the secret token we store to permit deletion of the policy
 	token, err := GenerateToken(TokenLength)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate random token")
 	}
 
+	// start a transaction to do the sequence of actions we need to perform in a
+	// safe way
+	tx, err := d.DB.Beginx()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to begin transaction")
+	}
+
+	// get the next id so we can give this to the dashboard
+	query := `SELECT nextval('policies_id_seq')`
+
+	var id int
+	err = tx.Get(&id, query)
+	if err != nil {
+		tx.Rollback()
+		return nil, errors.Wrap(err, "failed to obtain next value from policies sequence")
+	}
+
+	// convert into hashed form as this is what we expose publicly
+	encodedID, err := d.hashid.Encode([]int{id})
+	if err != nil {
+		tx.Rollback()
+		return nil, errors.Wrap(err, "failed to hash new policy id")
+	}
+
+	// call the dashboard API to create the policy and return a public key
+	publicKey, err := d.dashboardClient.CreateDashboard(
+		encodedID,
+		req.Label,
+		req.AuthorizableAttributeId,
+		req.CredentialIssuerEndpointUrl,
+	)
+
+	if err != nil {
+		tx.Rollback()
+		return nil, errors.Wrap(err, "failed to create dashboard")
+	}
+
+	// now we have all the data to persist the policy
 	b, err := json.Marshal(req.Operations)
 	if err != nil {
+		tx.Rollback()
 		return nil, errors.Wrap(err, "failed to marshal operations JSON")
 	}
 
+	// note the use of postgres native encryption to encrypt the token.
+	query = `INSERT INTO policies
+    (id, public_key, label, token, operations, authorizable_attribute_id, credential_issuer_endpoint_url)
+		VALUES (:id, :public_key, :label, pgp_sym_encrypt(:token, :encryption_password), :operations,
+		  :authorizable_attribute_id, :credential_issuer_endpoint_url)`
+
 	mapArgs := map[string]interface{}{
-		"label":               req.Label,
-		"token":               token,
-		"encryption_password": d.encryptionPassword,
-		"operations":          types.JSONText(b),
+		"id":                             id,
+		"public_key":                     publicKey,
+		"label":                          req.Label,
+		"token":                          token,
+		"encryption_password":            d.encryptionPassword,
+		"operations":                     types.JSONText(b),
+		"authorizable_attribute_id":      req.AuthorizableAttributeId,
+		"credential_issuer_endpoint_url": req.CredentialIssuerEndpointUrl,
 	}
 
-	sql, args, err := d.DB.BindNamed(sql, mapArgs)
+	query, args, err := tx.BindNamed(query, mapArgs)
 	if err != nil {
+		tx.Rollback()
 		return nil, errors.Wrap(err, "failed to bind named query")
 	}
 
-	// note we use a Get query here so we can read back the generated ID value
-	var id int
-	err = d.DB.Get(&id, sql, args...)
+	_, err = tx.Exec(query, args...)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute insert query")
-	}
-
-	encodedID, err := d.hashid.Encode([]int{id})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to hash policy id")
+		tx.Rollback()
+		return nil, errors.Wrap(err, "failed to insert policy record")
 	}
 
 	return &twirp.CreateEntitlementPolicyResponse{
 		CommunityId: encodedID,
 		Token:       token,
-	}, nil
+	}, tx.Commit()
 }
 
 // DeletePolicy is a method we expose from our Postgreo module which attempts to
@@ -162,7 +205,7 @@ func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.Cre
 // return an error to the caller.
 func (d *DB) DeletePolicy(req *twirp.DeleteEntitlementPolicyRequest) error {
 	// we use a CTE here to get back a count of deleted rows
-	sql := `WITH deleted AS (
+	query := `WITH deleted AS (
 		DELETE FROM policies p
 		WHERE p.id = :id
 		AND pgp_sym_decrypt(p.token, :encryption_password) = :token
@@ -184,30 +227,40 @@ func (d *DB) DeletePolicy(req *twirp.DeleteEntitlementPolicyRequest) error {
 		"encryption_password": d.encryptionPassword,
 	}
 
-	sql, args, err := d.DB.BindNamed(sql, mapArgs)
+	tx, err := d.DB.Beginx()
 	if err != nil {
+		return errors.Wrap(err, "failed to begin transaction")
+	}
+
+	query, args, err := tx.BindNamed(query, mapArgs)
+	if err != nil {
+		tx.Rollback()
 		return errors.Wrap(err, "failed to bind named query")
 	}
 
 	var count int
-	err = d.DB.Get(&count, sql, args...)
+	err = tx.Get(&count, query, args...)
 	if err != nil {
+		tx.Rollback()
 		return errors.Wrap(err, "failed to execute delete query")
 	}
 
 	if count != 1 {
+		tx.Rollback()
 		return errors.New("no policies were deleted, either the policy id or token must be invalid")
 	}
 
-	return nil
+	return tx.Commit()
 }
 
 // policy is an internal type used for pulling data back from the DB.
 type policy struct {
-	ID         int            `db:"id"`
-	Label      string         `db:"label"`
-	PublicKey  string         `db:"public_key"`
-	Operations types.JSONText `db:"operations"`
+	ID                          int            `db:"id"`
+	Label                       string         `db:"label"`
+	PublicKey                   string         `db:"public_key"`
+	Operations                  types.JSONText `db:"operations"`
+	AuthorizableAttributeID     string         `db:"authorizable_attribute_id"`
+	CredentialIssuerEndpointURL string         `db:"credential_issuer_endpoint_url"`
 }
 
 // ListPolicies returns a list of all PolicyResponse structs currently
@@ -215,7 +268,9 @@ type policy struct {
 // searching or filtering of policies as it is not expected that significant
 // numbers of policies will be registered.
 func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, error) {
-	sql := `SELECT id, label, public_key, operations FROM policies ORDER BY label`
+	sql := `SELECT id, label, public_key, operations,
+		authorizable_attribute_id, credential_issuer_endpoint_url
+		FROM policies ORDER BY label`
 
 	rows, err := d.DB.Queryx(sql)
 	if err != nil {
@@ -244,10 +299,12 @@ func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, er
 		}
 
 		policyResponse := &twirp.ListEntitlementPoliciesResponse_Policy{
-			CommunityId: hashedID,
-			Label:       p.Label,
-			PublicKey:   p.PublicKey,
-			Operations:  operations,
+			CommunityId:                 hashedID,
+			Label:                       p.Label,
+			PublicKey:                   p.PublicKey,
+			Operations:                  operations,
+			AuthorizableAttributeId:     p.AuthorizableAttributeID,
+			CredentialIssuerEndpointUrl: p.CredentialIssuerEndpointURL,
 		}
 
 		policies = append(policies, policyResponse)

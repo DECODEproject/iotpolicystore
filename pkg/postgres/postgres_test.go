@@ -36,8 +36,10 @@ func (s *PostgresSuite) SetupTest() {
 	}
 
 	s.db = postgres.NewDB(&config.Config{
-		ConnStr: connStr,
-		Logger:  logger,
+		ConnStr:       connStr,
+		Logger:        logger,
+		ClientTimeout: 1,
+		DashboardURL:  "http://bcnnow.decodeproject.eu",
 	})
 
 	err = s.db.Start()
