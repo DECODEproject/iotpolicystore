@@ -75,7 +75,7 @@ func (s *PolicyStoreSuite) TestRoundTrip() {
 
 	createResp, err := s.ps.CreateEntitlementPolicy(context.Background(), req)
 	assert.Nil(s.T(), err)
-	assert.NotEqual(s.T(), "", createResp.PolicyId)
+	assert.NotEqual(s.T(), "", createResp.CommunityId)
 	assert.NotEqual(s.T(), "", createResp.Token)
 
 	listResp, err := s.ps.ListEntitlementPolicies(context.Background(), &twirp.ListEntitlementPoliciesRequest{})
@@ -83,7 +83,7 @@ func (s *PolicyStoreSuite) TestRoundTrip() {
 	assert.Len(s.T(), listResp.Policies, 1)
 
 	policy := listResp.Policies[0]
-	assert.Equal(s.T(), createResp.PolicyId, policy.PolicyId)
+	assert.Equal(s.T(), createResp.CommunityId, policy.CommunityId)
 	assert.Len(s.T(), policy.Operations, 1)
 
 	operation := policy.Operations[0]
@@ -91,7 +91,7 @@ func (s *PolicyStoreSuite) TestRoundTrip() {
 	assert.Equal(s.T(), uint32(2), operation.SensorId)
 
 	_, err = s.ps.DeleteEntitlementPolicy(context.Background(), &twirp.DeleteEntitlementPolicyRequest{
-		PolicyId: createResp.PolicyId,
+		CommunityId: createResp.CommunityId,
 		Token:    createResp.Token,
 	})
 
@@ -246,33 +246,33 @@ func (s *PolicyStoreSuite) TestInvalidDeleteRequest() {
 		expectedError string
 	}{
 		{
-			label: "missing policy_id",
+			label: "missing community_id",
 			request: &twirp.DeleteEntitlementPolicyRequest{
-				PolicyId: "",
+				CommunityId: "",
 				Token:    "foobar",
 			},
-			expectedError: "twirp error invalid_argument: policy_id is required",
+			expectedError: "twirp error invalid_argument: community_id is required",
 		},
 		{
 			label: "missing token",
 			request: &twirp.DeleteEntitlementPolicyRequest{
-				PolicyId: "abc123",
+				CommunityId: "abc123",
 				Token:    "",
 			},
 			expectedError: "twirp error invalid_argument: token is required",
 		},
 		{
-			label: "invalid policy_id",
+			label: "invalid community_id",
 			request: &twirp.DeleteEntitlementPolicyRequest{
-				PolicyId: "abc123",
+				CommunityId: "abc123",
 				Token:    "foobar",
 			},
 			expectedError: "twirp error internal: failed to decode hashed id: mismatch between encode and decode: abc123 start xm14aAYw re-encoded. result: [39775]",
 		},
 		{
-			label: "invalid policy_id (double hashid)",
+			label: "invalid community_id (double hashid)",
 			request: &twirp.DeleteEntitlementPolicyRequest{
-				PolicyId: "Vbg3HEbX",
+				CommunityId: "Vbg3HEbX",
 				Token:    "foobar",
 			},
 			expectedError: "twirp error internal: unexpected hashed ID",
@@ -280,7 +280,7 @@ func (s *PolicyStoreSuite) TestInvalidDeleteRequest() {
 		{
 			label: "missing resource",
 			request: &twirp.DeleteEntitlementPolicyRequest{
-				PolicyId: "xm14aAYw",
+				CommunityId: "xm14aAYw",
 				Token:    "foobar",
 			},
 			expectedError: "twirp error internal: no policies were deleted, either the policy id or token must be invalid",

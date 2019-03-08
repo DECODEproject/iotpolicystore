@@ -125,7 +125,6 @@ func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.Cre
 	}
 
 	mapArgs := map[string]interface{}{
-		"public_key":          req.PublicKey,
 		"label":               req.Label,
 		"token":               token,
 		"encryption_password": d.encryptionPassword,
@@ -150,8 +149,8 @@ func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.Cre
 	}
 
 	return &twirp.CreateEntitlementPolicyResponse{
-		PolicyId: encodedID,
-		Token:    token,
+		CommunityId: encodedID,
+		Token:       token,
 	}, nil
 }
 
@@ -170,7 +169,7 @@ func (d *DB) DeletePolicy(req *twirp.DeleteEntitlementPolicyRequest) error {
 		RETURNING *)
 	SELECT COUNT(*) FROM deleted`
 
-	decodedIDList, err := d.hashid.DecodeWithError(req.PolicyId)
+	decodedIDList, err := d.hashid.DecodeWithError(req.CommunityId)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode hashed id")
 	}
@@ -245,10 +244,10 @@ func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, er
 		}
 
 		policyResponse := &twirp.ListEntitlementPoliciesResponse_Policy{
-			PolicyId:   hashedID,
-			Label:      p.Label,
-			PublicKey:  p.PublicKey,
-			Operations: operations,
+			CommunityId: hashedID,
+			Label:       p.Label,
+			PublicKey:   p.PublicKey,
+			Operations:  operations,
 		}
 
 		policies = append(policies, policyResponse)

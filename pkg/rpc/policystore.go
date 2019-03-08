@@ -53,12 +53,21 @@ func (p *policystore) Stop() error {
 // write a new entitlement policy into the policystore.
 func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.CreateEntitlementPolicyRequest) (*ps.CreateEntitlementPolicyResponse, error) {
 	if p.verbose {
-		p.logger.Log("publicKey", req.PublicKey, "label", req.Label, "msg", "createPolicy")
+		p.logger.Log(
+			"label", req.Label,
+			"msg", "createPolicy",
+			"authorizableAttributeId", req.AuthorizableAttributeId,
+			"credentialIssuerEndpointUrl", req.CredentialIssuerEndpointUrl,
+		)
 	}
 
 	// validate request
-	if req.PublicKey == "" {
-		return nil, twirp.RequiredArgumentError("public_key")
+	if req.AuthorizableAttributeId == "" {
+		return nil, twirp.RequiredArgumentError("authorizable_attribute_id")
+	}
+
+	if req.CredentialIssuerEndpointUrl == "" {
+		return nil, twirp.RequiredArgumentError("credential_issuer_endpoint_url")
 	}
 
 	if req.Label == "" {
@@ -84,11 +93,14 @@ func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.Creat
 // delete a previously created entitlement policy from the datastore.
 func (p *policystore) DeleteEntitlementPolicy(ctx context.Context, req *ps.DeleteEntitlementPolicyRequest) (*ps.DeleteEntitlementPolicyResponse, error) {
 	if p.verbose {
-		p.logger.Log("policyID", req.PolicyId, "msg", "deletePolicy")
+		p.logger.Log(
+			"communityID", req.CommunityId,
+			"msg", "deletePolicy",
+		)
 	}
 
-	if req.PolicyId == "" {
-		return nil, twirp.RequiredArgumentError("policy_id")
+	if req.CommunityId == "" {
+		return nil, twirp.RequiredArgumentError("community_id")
 	}
 
 	if req.Token == "" {
