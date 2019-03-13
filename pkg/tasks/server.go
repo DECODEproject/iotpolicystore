@@ -54,6 +54,16 @@ able to be supplied via an environment variable: $POLICYSTORE_EXAMPLE_FLAG`,
 			return errors.New("Must supply a hashid salt value")
 		}
 
+		dashboardURL := viper.GetString("dashboard-url")
+		if dashboardURL == "" {
+			return errors.New("Must supply a valid URL for the dashboard API")
+		}
+
+		clientTimeout := viper.GetInt("client-timeout")
+		if clientTimeout == 0 {
+			return errors.New("Must supply a non-zero timeout value")
+		}
+
 		config := &config.Config{
 			ServerAddr:         addr,
 			ConnStr:            connStr,
@@ -62,6 +72,8 @@ able to be supplied via an environment variable: $POLICYSTORE_EXAMPLE_FLAG`,
 			HashidSalt:         hashidSalt,
 			Verbose:            viper.GetBool("verbose"),
 			Domains:            viper.GetStringSlice("domains"),
+			DashboardURL:       dashboardURL,
+			ClientTimeout:      clientTimeout,
 			Logger:             logger.NewLogger(),
 		}
 
@@ -83,10 +95,12 @@ func init() {
 
 	serverCmd.Flags().StringP("addr", "a", ":8082", "address to which the server binds")
 	serverCmd.Flags().StringP("database-url", "d", "", "URL at which Postgres is listening (e.g. postgres://user:password@host:5432/dbname?sslmode=enable)")
-	serverCmd.Flags().StringSlice("domains", []string{}, "Comma separate list of domains for which we obtain TLS certificates")
+	serverCmd.Flags().StringSlice("domains", []string{}, "comma separate list of domains for which we obtain TLS certificates")
 	serverCmd.Flags().String("encryption-password", "", "password used to encrypt secret tokens we write to the database")
 	serverCmd.Flags().IntP("hashid-length", "l", 8, "minimum length of generated id strings for policies")
 	serverCmd.Flags().String("hashid-salt", "", "salt value used when generating IDs for policies")
+	serverCmd.Flags().String("dashboard-url", "", "URL at which the dashboard API is listening")
+	serverCmd.Flags().Int("client-timeout", 10, "timeout in seconds for the http client")
 
 	viper.BindPFlag("addr", serverCmd.Flags().Lookup("addr"))
 	viper.BindPFlag("database-url", serverCmd.Flags().Lookup("database-url"))
@@ -94,6 +108,8 @@ func init() {
 	viper.BindPFlag("encryption-password", serverCmd.Flags().Lookup("encryption-password"))
 	viper.BindPFlag("hashid-length", serverCmd.Flags().Lookup("hashid-length"))
 	viper.BindPFlag("hashid-salt", serverCmd.Flags().Lookup("hashid-salt"))
+	viper.BindPFlag("dashboard-url", serverCmd.Flags().Lookup("dashboard-url"))
+	viper.BindPFlag("client-timeout", serverCmd.Flags().Lookup("client-timeout"))
 
 	raven.SetRelease(version.Version)
 	raven.SetTagsContext(map[string]string{"component": "policystore"})

@@ -48,7 +48,7 @@ func (x Operation_Action) String() string {
 	return proto.EnumName(Operation_Action_name, int32(x))
 }
 func (Operation_Action) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_policystore_8a8cba85128fe6cf, []int{0, 0}
+	return fileDescriptor_policystore_f40f044c0ec2f897, []int{0, 0}
 }
 
 // Operation is a message used to describe an operation that may be applied to
@@ -94,7 +94,7 @@ func (m *Operation) Reset()         { *m = Operation{} }
 func (m *Operation) String() string { return proto.CompactTextString(m) }
 func (*Operation) ProtoMessage()    {}
 func (*Operation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_policystore_8a8cba85128fe6cf, []int{0}
+	return fileDescriptor_policystore_f40f044c0ec2f897, []int{0}
 }
 func (m *Operation) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Operation.Unmarshal(m, b)
@@ -147,12 +147,8 @@ func (m *Operation) GetInterval() uint32 {
 // collection of one or more "Operations". A single Operation specifies an
 // functional transformation to be performed on a single data channel being
 // published by a SmartCitizen device. The policy as a whole is comprised of
-// one or more Entitlements.
+// one or more Operations.
 type CreateEntitlementPolicyRequest struct {
-	// This attribute contains the public part of a key pair created by the
-	// caller. The caller must keep the private key secret as this is will be
-	// required for them to be able to decrypt data.
-	PublicKey string `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
 	// This attribute is used to attach a human friendly label to the policy
 	// suitable for presenting to the end user in the DECODE wallet. This is a
 	// required field.
@@ -160,17 +156,24 @@ type CreateEntitlementPolicyRequest struct {
 	// The list of operations we wish to create for the policy. This field is
 	// required, and it is required that the client supplies at least one
 	// Operation.
-	Operations           []*Operation `protobuf:"bytes,3,rep,name=operations,proto3" json:"operations,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
-	XXX_unrecognized     []byte       `json:"-"`
-	XXX_sizecache        int32        `json:"-"`
+	Operations []*Operation `protobuf:"bytes,3,rep,name=operations,proto3" json:"operations,omitempty"`
+	// This attribute contains an identifier of an authorizable attribute required
+	// for taking part in the Coconut protocol.
+	AuthorizableAttributeId string `protobuf:"bytes,4,opt,name=authorizable_attribute_id,json=authorizableAttributeId,proto3" json:"authorizable_attribute_id,omitempty"`
+	// This attribute contains a reference to the credential issuer service the
+	// end user must interact with in order to obtain blind credentials when
+	// taking part in the Coconut protocol.
+	CredentialIssuerEndpointUrl string   `protobuf:"bytes,5,opt,name=credential_issuer_endpoint_url,json=credentialIssuerEndpointUrl,proto3" json:"credential_issuer_endpoint_url,omitempty"`
+	XXX_NoUnkeyedLiteral        struct{} `json:"-"`
+	XXX_unrecognized            []byte   `json:"-"`
+	XXX_sizecache               int32    `json:"-"`
 }
 
 func (m *CreateEntitlementPolicyRequest) Reset()         { *m = CreateEntitlementPolicyRequest{} }
 func (m *CreateEntitlementPolicyRequest) String() string { return proto.CompactTextString(m) }
 func (*CreateEntitlementPolicyRequest) ProtoMessage()    {}
 func (*CreateEntitlementPolicyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_policystore_8a8cba85128fe6cf, []int{1}
+	return fileDescriptor_policystore_f40f044c0ec2f897, []int{1}
 }
 func (m *CreateEntitlementPolicyRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CreateEntitlementPolicyRequest.Unmarshal(m, b)
@@ -190,13 +193,6 @@ func (m *CreateEntitlementPolicyRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CreateEntitlementPolicyRequest proto.InternalMessageInfo
 
-func (m *CreateEntitlementPolicyRequest) GetPublicKey() string {
-	if m != nil {
-		return m.PublicKey
-	}
-	return ""
-}
-
 func (m *CreateEntitlementPolicyRequest) GetLabel() string {
 	if m != nil {
 		return m.Label
@@ -211,14 +207,28 @@ func (m *CreateEntitlementPolicyRequest) GetOperations() []*Operation {
 	return nil
 }
 
+func (m *CreateEntitlementPolicyRequest) GetAuthorizableAttributeId() string {
+	if m != nil {
+		return m.AuthorizableAttributeId
+	}
+	return ""
+}
+
+func (m *CreateEntitlementPolicyRequest) GetCredentialIssuerEndpointUrl() string {
+	if m != nil {
+		return m.CredentialIssuerEndpointUrl
+	}
+	return ""
+}
+
 // CreateEntitlementPolicyResponse is a message returned by the service after a
 // policy has been created. The message simply contains an identifier for the
 // policy, as well as a token that the caller must protect.
 type CreateEntitlementPolicyResponse struct {
-	// This attribute contains a unique identifier for the policy that can be used
-	// for later requests to either apply a policy to a specific device, or to
-	// delete the policy and so prevent new instances being applied to devices.
-	PolicyId string `protobuf:"bytes,1,opt,name=policy_id,json=policyId,proto3" json:"policy_id,omitempty"`
+	// This attribute contains a unique identifier for the community that can be
+	// used for later requests to either join a community to a specific device, or
+	// to delete the policy and so prevent new instances being applied to devices.
+	CommunityId string `protobuf:"bytes,3,opt,name=community_id,json=communityId,proto3" json:"community_id,omitempty"`
 	// This attribute contains a secret generated by the service that is
 	// associated with the policy. This token is required to be presented by a
 	// caller when deleting a policy, so must be treated as confidential by the
@@ -233,7 +243,7 @@ func (m *CreateEntitlementPolicyResponse) Reset()         { *m = CreateEntitleme
 func (m *CreateEntitlementPolicyResponse) String() string { return proto.CompactTextString(m) }
 func (*CreateEntitlementPolicyResponse) ProtoMessage()    {}
 func (*CreateEntitlementPolicyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_policystore_8a8cba85128fe6cf, []int{2}
+	return fileDescriptor_policystore_f40f044c0ec2f897, []int{2}
 }
 func (m *CreateEntitlementPolicyResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CreateEntitlementPolicyResponse.Unmarshal(m, b)
@@ -253,9 +263,9 @@ func (m *CreateEntitlementPolicyResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CreateEntitlementPolicyResponse proto.InternalMessageInfo
 
-func (m *CreateEntitlementPolicyResponse) GetPolicyId() string {
+func (m *CreateEntitlementPolicyResponse) GetCommunityId() string {
 	if m != nil {
-		return m.PolicyId
+		return m.CommunityId
 	}
 	return ""
 }
@@ -274,9 +284,9 @@ func (m *CreateEntitlementPolicyResponse) GetToken() string {
 // the policy, it just stops any new instances of this policy being applied to
 // other devices.
 type DeleteEntitlementPolicyRequest struct {
-	// This attribute contains the unique policy identifier returned when creating
-	// the policy. This is a requiredi field.
-	PolicyId string `protobuf:"bytes,1,opt,name=policy_id,json=policyId,proto3" json:"policy_id,omitempty"`
+	// This attribute contains the unique community identifier returned when
+	// creating the policy. This is a required field.
+	CommunityId string `protobuf:"bytes,3,opt,name=community_id,json=communityId,proto3" json:"community_id,omitempty"`
 	// This attribute contains the token returned to the creator when they
 	// created the policy, and must match the value stored within the
 	// PolicyStore. This is a required field.
@@ -290,7 +300,7 @@ func (m *DeleteEntitlementPolicyRequest) Reset()         { *m = DeleteEntitlemen
 func (m *DeleteEntitlementPolicyRequest) String() string { return proto.CompactTextString(m) }
 func (*DeleteEntitlementPolicyRequest) ProtoMessage()    {}
 func (*DeleteEntitlementPolicyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_policystore_8a8cba85128fe6cf, []int{3}
+	return fileDescriptor_policystore_f40f044c0ec2f897, []int{3}
 }
 func (m *DeleteEntitlementPolicyRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_DeleteEntitlementPolicyRequest.Unmarshal(m, b)
@@ -310,9 +320,9 @@ func (m *DeleteEntitlementPolicyRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DeleteEntitlementPolicyRequest proto.InternalMessageInfo
 
-func (m *DeleteEntitlementPolicyRequest) GetPolicyId() string {
+func (m *DeleteEntitlementPolicyRequest) GetCommunityId() string {
 	if m != nil {
-		return m.PolicyId
+		return m.CommunityId
 	}
 	return ""
 }
@@ -337,7 +347,7 @@ func (m *DeleteEntitlementPolicyResponse) Reset()         { *m = DeleteEntitleme
 func (m *DeleteEntitlementPolicyResponse) String() string { return proto.CompactTextString(m) }
 func (*DeleteEntitlementPolicyResponse) ProtoMessage()    {}
 func (*DeleteEntitlementPolicyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_policystore_8a8cba85128fe6cf, []int{4}
+	return fileDescriptor_policystore_f40f044c0ec2f897, []int{4}
 }
 func (m *DeleteEntitlementPolicyResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_DeleteEntitlementPolicyResponse.Unmarshal(m, b)
@@ -372,7 +382,7 @@ func (m *ListEntitlementPoliciesRequest) Reset()         { *m = ListEntitlementP
 func (m *ListEntitlementPoliciesRequest) String() string { return proto.CompactTextString(m) }
 func (*ListEntitlementPoliciesRequest) ProtoMessage()    {}
 func (*ListEntitlementPoliciesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_policystore_8a8cba85128fe6cf, []int{5}
+	return fileDescriptor_policystore_f40f044c0ec2f897, []int{5}
 }
 func (m *ListEntitlementPoliciesRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListEntitlementPoliciesRequest.Unmarshal(m, b)
@@ -410,7 +420,7 @@ func (m *ListEntitlementPoliciesResponse) Reset()         { *m = ListEntitlement
 func (m *ListEntitlementPoliciesResponse) String() string { return proto.CompactTextString(m) }
 func (*ListEntitlementPoliciesResponse) ProtoMessage()    {}
 func (*ListEntitlementPoliciesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_policystore_8a8cba85128fe6cf, []int{6}
+	return fileDescriptor_policystore_f40f044c0ec2f897, []int{6}
 }
 func (m *ListEntitlementPoliciesResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListEntitlementPoliciesResponse.Unmarshal(m, b)
@@ -443,7 +453,7 @@ func (m *ListEntitlementPoliciesResponse) GetPolicies() []*ListEntitlementPolici
 // policy's public key.
 type ListEntitlementPoliciesResponse_Policy struct {
 	// This attribute contains the unique identifier of the policy.
-	PolicyId string `protobuf:"bytes,1,opt,name=policy_id,json=policyId,proto3" json:"policy_id,omitempty"`
+	CommunityId string `protobuf:"bytes,7,opt,name=community_id,json=communityId,proto3" json:"community_id,omitempty"`
 	// This attribute contains a human friendly label describing the policy
 	// suitable for rendering in the DECODE wallet
 	Label string `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
@@ -452,10 +462,17 @@ type ListEntitlementPoliciesResponse_Policy struct {
 	// This attribute contains the public key of the policy. This public key
 	// attribute is the label applied to the bucket within the datastore which
 	// will be how data can be downloaded for the entitlement policy.
-	PublicKey            string   `protobuf:"bytes,4,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	PublicKey string `protobuf:"bytes,4,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
+	// This attribute contains an identifier of an authorizable attribute required
+	// for taking part in the Coconut protocol.
+	AuthorizableAttributeId string `protobuf:"bytes,5,opt,name=authorizable_attribute_id,json=authorizableAttributeId,proto3" json:"authorizable_attribute_id,omitempty"`
+	// This attribute contains a reference to the credential issuer service the
+	// end user must interact with in order to obtain blind credentials when
+	// taking part in the Coconut protocol.
+	CredentialIssuerEndpointUrl string   `protobuf:"bytes,6,opt,name=credential_issuer_endpoint_url,json=credentialIssuerEndpointUrl,proto3" json:"credential_issuer_endpoint_url,omitempty"`
+	XXX_NoUnkeyedLiteral        struct{} `json:"-"`
+	XXX_unrecognized            []byte   `json:"-"`
+	XXX_sizecache               int32    `json:"-"`
 }
 
 func (m *ListEntitlementPoliciesResponse_Policy) Reset() {
@@ -464,7 +481,7 @@ func (m *ListEntitlementPoliciesResponse_Policy) Reset() {
 func (m *ListEntitlementPoliciesResponse_Policy) String() string { return proto.CompactTextString(m) }
 func (*ListEntitlementPoliciesResponse_Policy) ProtoMessage()    {}
 func (*ListEntitlementPoliciesResponse_Policy) Descriptor() ([]byte, []int) {
-	return fileDescriptor_policystore_8a8cba85128fe6cf, []int{6, 0}
+	return fileDescriptor_policystore_f40f044c0ec2f897, []int{6, 0}
 }
 func (m *ListEntitlementPoliciesResponse_Policy) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListEntitlementPoliciesResponse_Policy.Unmarshal(m, b)
@@ -484,9 +501,9 @@ func (m *ListEntitlementPoliciesResponse_Policy) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ListEntitlementPoliciesResponse_Policy proto.InternalMessageInfo
 
-func (m *ListEntitlementPoliciesResponse_Policy) GetPolicyId() string {
+func (m *ListEntitlementPoliciesResponse_Policy) GetCommunityId() string {
 	if m != nil {
-		return m.PolicyId
+		return m.CommunityId
 	}
 	return ""
 }
@@ -512,6 +529,20 @@ func (m *ListEntitlementPoliciesResponse_Policy) GetPublicKey() string {
 	return ""
 }
 
+func (m *ListEntitlementPoliciesResponse_Policy) GetAuthorizableAttributeId() string {
+	if m != nil {
+		return m.AuthorizableAttributeId
+	}
+	return ""
+}
+
+func (m *ListEntitlementPoliciesResponse_Policy) GetCredentialIssuerEndpointUrl() string {
+	if m != nil {
+		return m.CredentialIssuerEndpointUrl
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*Operation)(nil), "decode.iot.policystore.Operation")
 	proto.RegisterType((*CreateEntitlementPolicyRequest)(nil), "decode.iot.policystore.CreateEntitlementPolicyRequest")
@@ -524,39 +555,45 @@ func init() {
 	proto.RegisterEnum("decode.iot.policystore.Operation_Action", Operation_Action_name, Operation_Action_value)
 }
 
-func init() { proto.RegisterFile("policystore.proto", fileDescriptor_policystore_8a8cba85128fe6cf) }
+func init() { proto.RegisterFile("policystore.proto", fileDescriptor_policystore_f40f044c0ec2f897) }
 
-var fileDescriptor_policystore_8a8cba85128fe6cf = []byte{
-	// 481 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x94, 0xd1, 0x6e, 0xd3, 0x30,
-	0x14, 0x86, 0x71, 0xd3, 0x75, 0xcd, 0xa9, 0x36, 0x15, 0x0b, 0x41, 0x54, 0x44, 0xdb, 0xe5, 0xaa,
-	0x57, 0xb9, 0x28, 0x12, 0x88, 0x1b, 0x44, 0x07, 0xd3, 0xa8, 0x06, 0x29, 0x72, 0x61, 0x48, 0xbb,
-	0xa9, 0xd2, 0xe6, 0x5c, 0x58, 0x0b, 0x76, 0x88, 0x3d, 0xa4, 0xbe, 0x02, 0x4f, 0xc0, 0xcd, 0xde,
-	0x82, 0x57, 0xe1, 0x7d, 0x50, 0xec, 0x74, 0xaa, 0x2a, 0xdc, 0x08, 0x24, 0xee, 0xea, 0xd3, 0xe3,
-	0xdf, 0xdf, 0x7f, 0xce, 0xaf, 0xc0, 0xfd, 0x5c, 0x66, 0x7c, 0xb5, 0x56, 0x5a, 0x16, 0x18, 0xe5,
-	0x85, 0xd4, 0x92, 0x3e, 0x4c, 0x71, 0x25, 0x53, 0x8c, 0xb8, 0xd4, 0xd1, 0xd6, 0xbf, 0xe1, 0x2f,
-	0x02, 0xfe, 0x2c, 0xc7, 0x22, 0xd1, 0x5c, 0x0a, 0xfa, 0x18, 0x7c, 0x85, 0x42, 0xc9, 0x62, 0xc1,
-	0xd3, 0x80, 0x0c, 0xc9, 0xe8, 0x88, 0xb5, 0x6d, 0x61, 0x9a, 0xd2, 0x57, 0xd0, 0x4a, 0x56, 0x65,
-	0x5b, 0xd0, 0x18, 0x92, 0xd1, 0xf1, 0x78, 0x14, 0xfd, 0x59, 0x33, 0xba, 0xd3, 0x8b, 0x26, 0xa6,
-	0x9f, 0x55, 0xf7, 0x28, 0x85, 0xe6, 0x92, 0x0b, 0x15, 0x78, 0x43, 0x6f, 0x44, 0x98, 0xf9, 0x4d,
-	0x7b, 0xd0, 0xe6, 0x42, 0x63, 0xf1, 0x2d, 0xc9, 0x82, 0xa6, 0x7d, 0x71, 0x73, 0x0e, 0x5f, 0x40,
-	0xcb, 0x2a, 0xd0, 0x0e, 0x1c, 0x7e, 0x8a, 0x2f, 0xe2, 0xd9, 0xe7, 0xb8, 0x7b, 0x8f, 0xfa, 0x70,
-	0x30, 0x7f, 0x3b, 0x61, 0x67, 0x5d, 0x42, 0x0f, 0xc1, 0x3b, 0x9d, 0xc6, 0xdd, 0x06, 0x3d, 0x06,
-	0x78, 0x3f, 0xbb, 0x9c, 0xc6, 0xe7, 0x8b, 0xc9, 0xe5, 0x79, 0xd7, 0x0b, 0x7f, 0x10, 0xe8, 0xbf,
-	0x2e, 0x30, 0xd1, 0x78, 0x26, 0x34, 0xd7, 0x19, 0x7e, 0x41, 0xa1, 0x3f, 0x18, 0x48, 0x86, 0x5f,
-	0x6f, 0x50, 0x69, 0xfa, 0x04, 0x20, 0xbf, 0x59, 0x66, 0x7c, 0xb5, 0xb8, 0xc6, 0xb5, 0x71, 0xeb,
-	0x33, 0xdf, 0x56, 0x2e, 0x70, 0x4d, 0x1f, 0xc0, 0x41, 0x96, 0x2c, 0x31, 0x33, 0x6e, 0x7d, 0x66,
-	0x0f, 0x74, 0x02, 0x20, 0x37, 0xf6, 0xac, 0x91, 0xce, 0xf8, 0xa4, 0x76, 0x10, 0x6c, 0xeb, 0x52,
-	0xf8, 0x11, 0x06, 0x4e, 0x32, 0x95, 0x4b, 0xa1, 0xb0, 0xdc, 0x83, 0xd5, 0xd9, 0xec, 0xc1, 0x67,
-	0x6d, 0x5b, 0x98, 0xa6, 0x25, 0x98, 0x96, 0xd7, 0x28, 0x36, 0x60, 0xe6, 0x10, 0xce, 0xa1, 0xff,
-	0x06, 0x33, 0xdc, 0xe3, 0xf7, 0x1f, 0x44, 0x4f, 0x60, 0xe0, 0x14, 0xb5, 0xa8, 0xe1, 0x10, 0xfa,
-	0xef, 0xb8, 0xd2, 0xbb, 0x0d, 0x1c, 0x55, 0xf5, 0x6e, 0x78, 0xdb, 0x80, 0x81, 0xb3, 0xa5, 0x32,
-	0x7c, 0x05, 0x16, 0x85, 0xa3, 0x0a, 0x88, 0x19, 0xea, 0x4b, 0xd7, 0x50, 0x6b, 0xa4, 0xa2, 0x8a,
-	0xef, 0x4e, 0xaf, 0x77, 0x4b, 0xa0, 0x65, 0x8b, 0xb5, 0x23, 0xf8, 0x2f, 0x0b, 0xdf, 0x09, 0x5a,
-	0x73, 0x27, 0x68, 0xe3, 0x9f, 0x1e, 0x74, 0x2c, 0xdf, 0xbc, 0x14, 0xa1, 0xdf, 0x09, 0x3c, 0x72,
-	0x04, 0x84, 0x3e, 0x73, 0xbd, 0xbc, 0x3f, 0xeb, 0xbd, 0xe7, 0x7f, 0x7d, 0xaf, 0x5a, 0x4c, 0x09,
-	0xe3, 0x88, 0x80, 0x1b, 0x66, 0x7f, 0x10, 0xdd, 0x30, 0x35, 0x59, 0x33, 0x30, 0x8e, 0xf5, 0xbb,
-	0x61, 0xf6, 0xa7, 0xd3, 0x0d, 0x53, 0x93, 0xb3, 0xd3, 0xa3, 0xab, 0xce, 0x56, 0xfb, 0xb2, 0x65,
-	0xbe, 0xb3, 0x4f, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff, 0x6d, 0x10, 0x2c, 0x4d, 0x7c, 0x05, 0x00,
-	0x00,
+var fileDescriptor_policystore_f40f044c0ec2f897 = []byte{
+	// 584 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x5d, 0x6f, 0xd3, 0x30,
+	0x14, 0x25, 0x4d, 0xdb, 0x35, 0xb7, 0x6c, 0x2a, 0x16, 0x62, 0x61, 0x13, 0x5d, 0x97, 0xa7, 0x3e,
+	0xe5, 0x61, 0x48, 0x20, 0x78, 0x40, 0x74, 0x63, 0x1a, 0x61, 0xd0, 0xa1, 0x4c, 0x1b, 0xd2, 0x5e,
+	0xa2, 0x7c, 0x5c, 0x09, 0xb3, 0xd4, 0x0e, 0x8e, 0x83, 0x54, 0x7e, 0x02, 0xe2, 0xe7, 0xb0, 0x9f,
+	0xc2, 0xff, 0x41, 0x71, 0xd2, 0xae, 0x82, 0xb9, 0x05, 0x01, 0x6f, 0xf1, 0xf5, 0xf1, 0x3d, 0xe7,
+	0x9e, 0x1c, 0x27, 0x70, 0x27, 0xe3, 0x29, 0x8d, 0xa7, 0xb9, 0xe4, 0x02, 0xdd, 0x4c, 0x70, 0xc9,
+	0xc9, 0xbd, 0x04, 0x63, 0x9e, 0xa0, 0x4b, 0xb9, 0x74, 0x17, 0x76, 0x9d, 0xef, 0x06, 0x58, 0x27,
+	0x19, 0x8a, 0x50, 0x52, 0xce, 0xc8, 0x36, 0x58, 0x39, 0xb2, 0x9c, 0x8b, 0x80, 0x26, 0xb6, 0x31,
+	0x30, 0x86, 0xeb, 0x7e, 0xa7, 0x2a, 0x78, 0x09, 0x79, 0x0e, 0xed, 0x30, 0x2e, 0x61, 0x76, 0x63,
+	0x60, 0x0c, 0x37, 0xf6, 0x86, 0xee, 0xcd, 0x3d, 0xdd, 0x79, 0x3f, 0x77, 0xa4, 0xf0, 0x7e, 0x7d,
+	0x8e, 0x10, 0x68, 0x46, 0x94, 0xe5, 0xb6, 0x39, 0x30, 0x87, 0x86, 0xaf, 0x9e, 0xc9, 0x16, 0x74,
+	0x28, 0x93, 0x28, 0x3e, 0x85, 0xa9, 0xdd, 0xac, 0x18, 0x67, 0x6b, 0xe7, 0x09, 0xb4, 0xab, 0x0e,
+	0xa4, 0x0b, 0x6b, 0x67, 0xe3, 0xe3, 0xf1, 0xc9, 0xbb, 0x71, 0xef, 0x16, 0xb1, 0xa0, 0x75, 0xfa,
+	0x72, 0xe4, 0x1f, 0xf6, 0x0c, 0xb2, 0x06, 0xe6, 0xbe, 0x37, 0xee, 0x35, 0xc8, 0x06, 0xc0, 0x9b,
+	0x93, 0x73, 0x6f, 0x7c, 0x14, 0x8c, 0xce, 0x8f, 0x7a, 0xa6, 0xf3, 0xb5, 0x01, 0xfd, 0x03, 0x81,
+	0xa1, 0xc4, 0x43, 0x26, 0xa9, 0x4c, 0x71, 0x82, 0x4c, 0xbe, 0x55, 0x22, 0x7d, 0xfc, 0x58, 0x60,
+	0x2e, 0xc9, 0x5d, 0x68, 0xa5, 0x61, 0x84, 0xa9, 0x1a, 0xc7, 0xf2, 0xab, 0x05, 0x19, 0x01, 0xf0,
+	0x99, 0xfe, 0x4a, 0x69, 0x77, 0x6f, 0x77, 0xe5, 0xa4, 0xfe, 0xc2, 0x21, 0xf2, 0x14, 0xee, 0x87,
+	0x85, 0x7c, 0xcf, 0x05, 0xfd, 0x1c, 0x46, 0x29, 0x06, 0xa1, 0x94, 0x82, 0x46, 0x85, 0xc4, 0xd2,
+	0xd5, 0xa6, 0x22, 0xdb, 0x5c, 0x04, 0x8c, 0x66, 0xfb, 0x5e, 0x42, 0x0e, 0xa0, 0x1f, 0x0b, 0x4c,
+	0x90, 0x49, 0x1a, 0xa6, 0x01, 0xcd, 0xf3, 0x02, 0x45, 0x80, 0x2c, 0xc9, 0x38, 0x65, 0x32, 0x28,
+	0x44, 0x6a, 0xb7, 0x54, 0x83, 0xed, 0x6b, 0x94, 0xa7, 0x40, 0x87, 0x35, 0xe6, 0x4c, 0xa4, 0xaf,
+	0x9a, 0x1d, 0xa3, 0xd7, 0xf0, 0x21, 0x2b, 0xa2, 0x94, 0xc6, 0xc1, 0x25, 0x4e, 0x9d, 0x4b, 0xd8,
+	0xd1, 0xba, 0x91, 0x67, 0x9c, 0xe5, 0x48, 0x76, 0xe1, 0x76, 0xcc, 0x27, 0x93, 0x82, 0x51, 0x39,
+	0x2d, 0x85, 0x9a, 0x8a, 0xa7, 0x3b, 0xaf, 0x79, 0x49, 0xe9, 0x98, 0xe4, 0x97, 0xc8, 0x66, 0x8e,
+	0xa9, 0x45, 0xcd, 0x66, 0x55, 0xbe, 0x04, 0x34, 0x71, 0x3e, 0x40, 0xff, 0x05, 0xa6, 0xb8, 0xc4,
+	0xfa, 0x7f, 0xc7, 0xb5, 0x0b, 0x3b, 0x5a, 0xae, 0x6a, 0x30, 0x67, 0x00, 0xfd, 0xd7, 0x34, 0x97,
+	0x3f, 0x03, 0x28, 0xe6, 0xb5, 0x1c, 0xe7, 0xca, 0x84, 0x1d, 0x2d, 0xa4, 0xb6, 0xe7, 0x02, 0x3a,
+	0x59, 0x5d, 0xb3, 0x0d, 0x95, 0x8a, 0x67, 0xba, 0x54, 0xac, 0x68, 0xe5, 0xd6, 0xfa, 0xe6, 0xfd,
+	0xb6, 0xae, 0x1a, 0xd0, 0xae, 0x8a, 0xbf, 0x38, 0xb3, 0x76, 0xa3, 0x33, 0xff, 0x27, 0xb7, 0x0f,
+	0x60, 0x21, 0x32, 0x75, 0x50, 0xad, 0xaa, 0x72, 0x8c, 0xd3, 0xe5, 0xb1, 0x6e, 0xfd, 0x6d, 0xac,
+	0xdb, 0xbf, 0x1b, 0xeb, 0xeb, 0x97, 0xbf, 0xf7, 0xcd, 0x84, 0x6e, 0xe5, 0xdb, 0x69, 0x39, 0x16,
+	0xf9, 0x62, 0xc0, 0xa6, 0x26, 0xe6, 0xe4, 0x91, 0xce, 0x8b, 0xe5, 0x5f, 0x89, 0xad, 0xc7, 0x7f,
+	0x7c, 0xae, 0x0e, 0x4c, 0x29, 0x46, 0x13, 0x4d, 0xbd, 0x98, 0xe5, 0xf7, 0x46, 0x2f, 0x66, 0xc5,
+	0x1d, 0x50, 0x62, 0x34, 0xb1, 0xd4, 0x8b, 0x59, 0x7e, 0x6b, 0xf4, 0x62, 0x56, 0xe4, 0x7f, 0x7f,
+	0xfd, 0xa2, 0xbb, 0x00, 0x8f, 0xda, 0xea, 0x0f, 0xf5, 0xf0, 0x47, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0xd7, 0xd2, 0xa4, 0x01, 0xb6, 0x06, 0x00, 0x00,
 }

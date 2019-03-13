@@ -53,19 +53,16 @@ func (p *policystore) Stop() error {
 // write a new entitlement policy into the policystore.
 func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.CreateEntitlementPolicyRequest) (*ps.CreateEntitlementPolicyResponse, error) {
 	if p.verbose {
-		p.logger.Log("publicKey", req.PublicKey, "label", req.Label, "msg", "createPolicy")
+		p.logger.Log(
+			"label", req.Label,
+			"msg", "createPolicy",
+			"authorizableAttributeId", req.AuthorizableAttributeId,
+			"credentialIssuerEndpointUrl", req.CredentialIssuerEndpointUrl,
+		)
 	}
 
 	// validate request
-	if req.PublicKey == "" {
-		return nil, twirp.RequiredArgumentError("public_key")
-	}
-
-	if req.Label == "" {
-		return nil, twirp.RequiredArgumentError("label")
-	}
-
-	err := validateOperations(req.Operations)
+	err := validateCreateRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -84,11 +81,14 @@ func (p *policystore) CreateEntitlementPolicy(ctx context.Context, req *ps.Creat
 // delete a previously created entitlement policy from the datastore.
 func (p *policystore) DeleteEntitlementPolicy(ctx context.Context, req *ps.DeleteEntitlementPolicyRequest) (*ps.DeleteEntitlementPolicyResponse, error) {
 	if p.verbose {
-		p.logger.Log("policyID", req.PolicyId, "msg", "deletePolicy")
+		p.logger.Log(
+			"communityID", req.CommunityId,
+			"msg", "deletePolicy",
+		)
 	}
 
-	if req.PolicyId == "" {
-		return nil, twirp.RequiredArgumentError("policy_id")
+	if req.CommunityId == "" {
+		return nil, twirp.RequiredArgumentError("community_id")
 	}
 
 	if req.Token == "" {
@@ -122,6 +122,29 @@ func (p *policystore) ListEntitlementPolicies(ctx context.Context, req *ps.ListE
 	return &ps.ListEntitlementPoliciesResponse{
 		Policies: policies,
 	}, nil
+}
+
+// validateCreateRequest validates required attributes on the incoming create
+// policy request
+func validateCreateRequest(req *ps.CreateEntitlementPolicyRequest) error {
+	if req.AuthorizableAttributeId == "" {
+		return twirp.RequiredArgumentError("authorizable_attribute_id")
+	}
+
+	if req.CredentialIssuerEndpointUrl == "" {
+		return twirp.RequiredArgumentError("credential_issuer_endpoint_url")
+	}
+
+	if req.Label == "" {
+		return twirp.RequiredArgumentError("label")
+	}
+
+	err := validateOperations(req.Operations)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // validateOperations validates the content of all operations

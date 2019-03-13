@@ -4,6 +4,8 @@
 // sql/20181009155147_add_policy_table.up.sql (341B)
 // sql/20190306110030_add_cert_cache_table.down.sql (34B)
 // sql/20190306110030_add_cert_cache_table.up.sql (106B)
+// sql/20190308154458_add_coconut_fields.down.sql (107B)
+// sql/20190308154458_add_coconut_fields.up.sql (134B)
 
 package migrations
 
@@ -152,6 +154,46 @@ func _20190306110030_add_cert_cache_tableUpSql() (*asset, error) {
 	return a, nil
 }
 
+var __20190308154458_add_coconut_fieldsDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x5c\xca\x31\x0e\xc2\x30\x0c\x05\xd0\x9d\x53\xf8\x00\xdc\x80\xa9\x40\xb7\x40\x51\x55\x66\x2b\x6d\x2c\xf1\x25\x2b\x89\x1c\x7b\xe1\xf4\xec\xec\x6f\x4a\xdb\xbc\xd2\x36\x5d\xd3\x4c\xbd\x29\x0e\xc8\x38\x11\xdd\xd7\xe5\x45\xb7\x25\xbd\x1f\x4f\xca\xe1\x9f\x66\xf8\xe6\x5d\x85\xb3\xbb\x61\x0f\x17\x46\x39\xff\xc1\xc3\xa4\x48\x75\x64\x65\x8c\x11\x62\x2c\xb5\xf4\x86\xea\x1c\xa6\x97\x5f\x00\x00\x00\xff\xff\x2c\xbe\x2a\xac\x6b\x00\x00\x00")
+
+func _20190308154458_add_coconut_fieldsDownSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__20190308154458_add_coconut_fieldsDownSql,
+		"20190308154458_add_coconut_fields.down.sql",
+	)
+}
+
+func _20190308154458_add_coconut_fieldsDownSql() (*asset, error) {
+	bytes, err := _20190308154458_add_coconut_fieldsDownSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "20190308154458_add_coconut_fields.down.sql", size: 107, mode: os.FileMode(420), modTime: time.Unix(1552066680, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xd2, 0x30, 0x7b, 0x66, 0x8c, 0x36, 0x59, 0x67, 0x70, 0x5b, 0x52, 0x71, 0x53, 0x0, 0x68, 0x82, 0x3, 0xd8, 0x93, 0xe5, 0x55, 0x36, 0xee, 0x23, 0xfb, 0x74, 0x2e, 0x64, 0x9b, 0x3, 0x43, 0xba}}
+	return a, nil
+}
+
+var __20190308154458_add_coconut_fieldsUpSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x54\xcb\x31\x0a\xc3\x30\x0c\x00\xc0\x3d\xaf\xd0\x03\xfa\x83\x4e\x69\xe3\x4d\x75\xa0\x28\xd0\x4d\x38\xb1\xa0\x02\x63\x07\x59\x5e\xfa\xfa\xce\x79\xc0\xcd\x48\xe1\x0d\x34\x3f\x30\xc0\xd9\x8a\x1e\x2a\x7d\x02\x98\x97\x05\x9e\x2b\x6e\xaf\x08\x69\xf8\xb7\x99\xfe\xd2\x5e\x84\x93\xbb\xe9\x3e\x5c\x58\x33\x50\xf8\x10\xc4\x95\x20\x6e\x88\xb7\xab\x3a\x4c\xb2\x54\xd7\x54\x58\x7b\x1f\x62\x2c\x35\x9f\x4d\xab\xf3\xb0\x72\xa5\xf7\xe9\x1f\x00\x00\xff\xff\x10\x6f\x78\xad\x86\x00\x00\x00")
+
+func _20190308154458_add_coconut_fieldsUpSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__20190308154458_add_coconut_fieldsUpSql,
+		"20190308154458_add_coconut_fields.up.sql",
+	)
+}
+
+func _20190308154458_add_coconut_fieldsUpSql() (*asset, error) {
+	bytes, err := _20190308154458_add_coconut_fieldsUpSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "20190308154458_add_coconut_fields.up.sql", size: 134, mode: os.FileMode(420), modTime: time.Unix(1552060406, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x8f, 0x6f, 0xd2, 0x93, 0x5a, 0xc7, 0xd9, 0x97, 0x64, 0xd8, 0x4e, 0xd9, 0x4b, 0x47, 0xd8, 0x5d, 0xe2, 0x3c, 0x58, 0x22, 0x68, 0x73, 0xe7, 0xb3, 0x10, 0x20, 0x98, 0xc7, 0xb1, 0x8f, 0x4a, 0x61}}
+	return a, nil
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -250,6 +292,10 @@ var _bindata = map[string]func() (*asset, error){
 	"20190306110030_add_cert_cache_table.down.sql": _20190306110030_add_cert_cache_tableDownSql,
 
 	"20190306110030_add_cert_cache_table.up.sql": _20190306110030_add_cert_cache_tableUpSql,
+
+	"20190308154458_add_coconut_fields.down.sql": _20190308154458_add_coconut_fieldsDownSql,
+
+	"20190308154458_add_coconut_fields.up.sql": _20190308154458_add_coconut_fieldsUpSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -297,6 +343,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"20181009155147_add_policy_table.up.sql":       &bintree{_20181009155147_add_policy_tableUpSql, map[string]*bintree{}},
 	"20190306110030_add_cert_cache_table.down.sql": &bintree{_20190306110030_add_cert_cache_tableDownSql, map[string]*bintree{}},
 	"20190306110030_add_cert_cache_table.up.sql":   &bintree{_20190306110030_add_cert_cache_tableUpSql, map[string]*bintree{}},
+	"20190308154458_add_coconut_fields.down.sql":   &bintree{_20190308154458_add_coconut_fieldsDownSql, map[string]*bintree{}},
+	"20190308154458_add_coconut_fields.up.sql":     &bintree{_20190308154458_add_coconut_fieldsUpSql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory.
