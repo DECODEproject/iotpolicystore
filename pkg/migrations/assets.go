@@ -169,7 +169,7 @@ func _20190308154458_add_coconut_fieldsDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20190308154458_add_coconut_fields.down.sql", size: 107, mode: os.FileMode(420), modTime: time.Unix(1552066680, 0)}
+	info := bindataFileInfo{name: "20190308154458_add_coconut_fields.down.sql", size: 107, mode: os.FileMode(420), modTime: time.Unix(1552444813, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xd2, 0x30, 0x7b, 0x66, 0x8c, 0x36, 0x59, 0x67, 0x70, 0x5b, 0x52, 0x71, 0x53, 0x0, 0x68, 0x82, 0x3, 0xd8, 0x93, 0xe5, 0x55, 0x36, 0xee, 0x23, 0xfb, 0x74, 0x2e, 0x64, 0x9b, 0x3, 0x43, 0xba}}
 	return a, nil
 }
@@ -189,7 +189,7 @@ func _20190308154458_add_coconut_fieldsUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20190308154458_add_coconut_fields.up.sql", size: 134, mode: os.FileMode(420), modTime: time.Unix(1552060406, 0)}
+	info := bindataFileInfo{name: "20190308154458_add_coconut_fields.up.sql", size: 134, mode: os.FileMode(420), modTime: time.Unix(1552444813, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x8f, 0x6f, 0xd2, 0x93, 0x5a, 0xc7, 0xd9, 0x97, 0x64, 0xd8, 0x4e, 0xd9, 0x4b, 0x47, 0xd8, 0x5d, 0xe2, 0x3c, 0x58, 0x22, 0x68, 0x73, 0xe7, 0xb3, 0x10, 0x20, 0x98, 0xc7, 0xb1, 0x8f, 0x4a, 0x61}}
 	return a, nil
 }
