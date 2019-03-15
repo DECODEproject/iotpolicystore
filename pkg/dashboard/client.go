@@ -48,6 +48,11 @@ type createResponse struct {
 	PublicKey string `json:"public_key"`
 }
 
+// errorResponse is a struct used to marshal error responses back from the dashboard
+type errorResponse struct {
+	Message string `json:"message"`
+}
+
 // CreateDashboard attempts to make a call to the dashboard API to create a new
 // dashboard. It returns the public key of the dashbaord or an error if there is
 // any problem with the submitted values (i.e. the authorizable attribute id is
@@ -79,13 +84,19 @@ func (c *Client) CreateDashboard(communityID, communityName, authorizableAttribu
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Unexpected response code: %s", resp.Status)
-	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read response body")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		var e errorResponse
+		err = json.Unmarshal(body, &e)
+		if err != nil {
+			return "", errors.Wrap(err, "failed to unmarshal error response")
+		}
+
+		return "", fmt.Errorf("unexpected response: %s - %s", resp.Status, e.Message)
 	}
 
 	var dashboard createResponse
