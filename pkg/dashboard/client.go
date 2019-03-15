@@ -45,7 +45,6 @@ type createRequest struct {
 // createResponse is a struct used to marshal responses back from the dashboard
 // API.
 type createResponse struct {
-	ID        string `json:"id"`
 	PublicKey string `json:"public_key"`
 }
 
