@@ -21,8 +21,6 @@ func TestHealthCheckHandler(t *testing.T) {
 	db := postgres.NewDB(&config.Config{
 		ConnStr:            connStr,
 		Logger:             logger,
-		HashidLength:       8,
-		HashidSalt:         "salt",
 		EncryptionPassword: "password",
 	})
 

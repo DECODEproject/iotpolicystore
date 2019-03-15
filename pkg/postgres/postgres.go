@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 
+	"github.com/google/uuid"
+
 	raven "github.com/getsentry/raven-go"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/jmoiron/sqlx"
 	"github.com/jmoiron/sqlx/types"
 	"github.com/pkg/errors"
-	"github.com/speps/go-hashids"
 	twirp "github.com/thingful/twirp-policystore-go"
 	"golang.org/x/crypto/acme/autocert"
 
@@ -34,9 +35,6 @@ type DB struct {
 	verbose            bool
 	logger             kitlog.Logger
 
-	hashidData *hashids.HashIDData
-	hashid     *hashids.HashID
-
 	dashboardClient *dashboard.Client
 }
 
@@ -52,18 +50,13 @@ func Open(connStr string) (*sqlx.DB, error) {
 func NewDB(config *config.Config) *DB {
 	logger := kitlog.With(config.Logger, "module", "postgres")
 
-	logger.Log("msg", "creating postgres DB connection", "hashidMinLength", config.HashidLength)
-
-	hd := hashids.NewData()
-	hd.Salt = config.HashidSalt
-	hd.MinLength = config.HashidLength
+	logger.Log("msg", "creating postgres DB connection")
 
 	return &DB{
 		connStr:            config.ConnStr,
 		encryptionPassword: []byte(config.EncryptionPassword),
 		verbose:            config.Verbose,
 		logger:             logger,
-		hashidData:         hd,
 		dashboardClient:    dashboard.NewClient(config),
 	}
 }
@@ -79,13 +72,6 @@ func (d *DB) Start() error {
 	}
 
 	d.DB = db
-
-	h, err := hashids.NewWithData(d.hashidData)
-	if err != nil {
-		return errors.Wrap(err, "failed to create hashid generator")
-	}
-
-	d.hashid = h
 
 	err = MigrateUp(d.DB, d.logger)
 	if err != nil {
@@ -125,26 +111,14 @@ func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.Cre
 		return nil, errors.Wrap(err, "failed to begin transaction")
 	}
 
-	// get the next id so we can give this to the dashboard
-	query := `SELECT nextval('policies_id_seq')`
-
-	var id int
-	err = tx.Get(&id, query)
+	id, err := uuid.NewRandom()
 	if err != nil {
-		tx.Rollback()
-		return nil, errors.Wrap(err, "failed to obtain next value from policies sequence")
-	}
-
-	// convert into hashed form as this is what we expose publicly
-	encodedID, err := d.hashid.Encode([]int{id})
-	if err != nil {
-		tx.Rollback()
-		return nil, errors.Wrap(err, "failed to hash new policy id")
+		return nil, errors.Wrap(err, "failed to create uuid")
 	}
 
 	// call the dashboard API to create the policy and return a public key
 	publicKey, err := d.dashboardClient.CreateDashboard(
-		encodedID,
+		id.String(),
 		req.Label,
 		req.AuthorizableAttributeId,
 		req.CredentialIssuerEndpointUrl,
@@ -163,13 +137,12 @@ func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.Cre
 	}
 
 	// note the use of postgres native encryption to encrypt the token.
-	query = `INSERT INTO policies
-    (id, public_key, label, token, operations, authorizable_attribute_id, credential_issuer_endpoint_url)
-		VALUES (:id, :public_key, :label, pgp_sym_encrypt(:token, :encryption_password), :operations,
-		  :authorizable_attribute_id, :credential_issuer_endpoint_url)`
+	query := `INSERT INTO policies
+    (public_key, label, token, operations, authorizable_attribute_id, credential_issuer_endpoint_url, uuid)
+		VALUES (:public_key, :label, pgp_sym_encrypt(:token, :encryption_password), :operations,
+		  :authorizable_attribute_id, :credential_issuer_endpoint_url, :uuid)`
 
 	mapArgs := map[string]interface{}{
-		"id":                             id,
 		"public_key":                     publicKey,
 		"label":                          req.Label,
 		"token":                          token,
@@ -177,6 +150,7 @@ func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.Cre
 		"operations":                     types.JSONText(b),
 		"authorizable_attribute_id":      req.AuthorizableAttributeId,
 		"credential_issuer_endpoint_url": req.CredentialIssuerEndpointUrl,
+		"uuid":                           id.String(),
 	}
 
 	query, args, err := tx.BindNamed(query, mapArgs)
@@ -192,7 +166,7 @@ func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.Cre
 	}
 
 	return &twirp.CreateEntitlementPolicyResponse{
-		CommunityId: encodedID,
+		CommunityId: id.String(),
 		Token:       token,
 	}, tx.Commit()
 }
@@ -207,22 +181,13 @@ func (d *DB) DeletePolicy(req *twirp.DeleteEntitlementPolicyRequest) error {
 	// we use a CTE here to get back a count of deleted rows
 	query := `WITH deleted AS (
 		DELETE FROM policies p
-		WHERE p.id = :id
+		WHERE p.uuid = :uuid
 		AND pgp_sym_decrypt(p.token, :encryption_password) = :token
 		RETURNING *)
 	SELECT COUNT(*) FROM deleted`
 
-	decodedIDList, err := d.hashid.DecodeWithError(req.CommunityId)
-	if err != nil {
-		return errors.Wrap(err, "failed to decode hashed id")
-	}
-
-	if len(decodedIDList) != 1 {
-		return errors.New("unexpected hashed ID")
-	}
-
 	mapArgs := map[string]interface{}{
-		"id":                  decodedIDList[0],
+		"uuid":                req.CommunityId,
 		"token":               req.Token,
 		"encryption_password": d.encryptionPassword,
 	}
@@ -255,7 +220,7 @@ func (d *DB) DeletePolicy(req *twirp.DeleteEntitlementPolicyRequest) error {
 
 // policy is an internal type used for pulling data back from the DB.
 type policy struct {
-	ID                          int            `db:"id"`
+	UUID                        string         `db:"uuid"`
 	Label                       string         `db:"label"`
 	PublicKey                   string         `db:"public_key"`
 	Operations                  types.JSONText `db:"operations"`
@@ -268,7 +233,7 @@ type policy struct {
 // searching or filtering of policies as it is not expected that significant
 // numbers of policies will be registered.
 func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, error) {
-	sql := `SELECT id, label, public_key, operations,
+	sql := `SELECT uuid, label, public_key, operations,
 		authorizable_attribute_id, credential_issuer_endpoint_url
 		FROM policies ORDER BY label`
 
@@ -287,11 +252,6 @@ func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, er
 			return nil, errors.Wrap(err, "failed to scan policy row from db")
 		}
 
-		hashedID, err := d.hashid.Encode([]int{p.ID})
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to encode hashed id")
-		}
-
 		var operations []*twirp.Operation
 		err = json.Unmarshal(p.Operations, &operations)
 		if err != nil {
@@ -299,7 +259,7 @@ func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, er
 		}
 
 		policyResponse := &twirp.ListEntitlementPoliciesResponse_Policy{
-			CommunityId:                 hashedID,
+			CommunityId:                 p.UUID,
 			Label:                       p.Label,
 			PublicKey:                   p.PublicKey,
 			Operations:                  operations,
