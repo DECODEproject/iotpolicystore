@@ -72,12 +72,17 @@ func (c *Client) CreateDashboard(communityID, communityName, authorizableAttribu
 	}
 
 	req.Header.Set("User-Agent", c.userAgent)
+	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := c.Do(req)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to make http request")
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Unexpected response code: %s", resp.Status)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
