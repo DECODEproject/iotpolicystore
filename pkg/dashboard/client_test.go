@@ -27,7 +27,7 @@ func TestCreateOK(t *testing.T) {
 		simular.NewStubRequest(
 			http.MethodPost,
 			"http://bcnnow.decodeproject.eu/community/create_encrypted",
-			simular.NewStringResponder(200, `{"id":"abc123","public_key": "foobarkey"}`),
+			simular.NewStringResponder(200, `{"id":12,"public_key": "foobarkey"}`),
 			simular.WithBody(
 				bytes.NewBufferString(`{"community_name":"name","community_id":"id","authorizable_attribute_id":"attribute_id","credential_issuer_endpoint_address":"http://credential.com"}`),
 			),

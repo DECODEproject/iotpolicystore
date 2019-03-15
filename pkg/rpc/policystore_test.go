@@ -75,7 +75,7 @@ func (s *PolicyStoreSuite) TestRoundTrip() {
 		simular.NewStubRequest(
 			http.MethodPost,
 			"http://bcnnow.decodeproject.eu/community/create_encrypted",
-			simular.NewStringResponder(200, `{"id":"community_id","public_key": "community_key"}`),
+			simular.NewStringResponder(200, `{"id":12,"public_key": "community_key"}`),
 		),
 	)
 
