@@ -111,7 +111,7 @@ func _20181009155147_add_policy_tableUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20181009155147_add_policy_table.up.sql", size: 386, mode: os.FileMode(420), modTime: time.Unix(1552653817, 0)}
+	info := bindataFileInfo{name: "20181009155147_add_policy_table.up.sql", size: 386, mode: os.FileMode(420), modTime: time.Unix(1552658127, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xb2, 0x31, 0xf0, 0x42, 0x61, 0xc8, 0xbc, 0x89, 0xc5, 0x29, 0xe6, 0xb8, 0xbb, 0x59, 0xd3, 0x2c, 0x76, 0xe4, 0xa7, 0xfa, 0x71, 0x16, 0xa, 0x36, 0xa8, 0xc7, 0xbc, 0x9f, 0x6c, 0x57, 0x24, 0x50}}
 	return a, nil
 }
@@ -211,7 +211,7 @@ func _20190315114713_add_uuid_columnDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20190315114713_add_uuid_column.down.sql", size: 127, mode: os.FileMode(420), modTime: time.Unix(1552650592, 0)}
+	info := bindataFileInfo{name: "20190315114713_add_uuid_column.down.sql", size: 127, mode: os.FileMode(420), modTime: time.Unix(1552658127, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xcf, 0x8f, 0x8b, 0xe8, 0x50, 0x44, 0xad, 0xed, 0x47, 0x4e, 0xf1, 0x54, 0xd3, 0x3c, 0xaf, 0xaf, 0x5b, 0xee, 0x9f, 0xd9, 0x9f, 0xda, 0x1a, 0x6c, 0x6b, 0x15, 0x3d, 0x5b, 0xce, 0xcf, 0xc8, 0x52}}
 	return a, nil
 }
@@ -231,7 +231,7 @@ func _20190315114713_add_uuid_columnUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20190315114713_add_uuid_column.up.sql", size: 175, mode: os.FileMode(420), modTime: time.Unix(1552650540, 0)}
+	info := bindataFileInfo{name: "20190315114713_add_uuid_column.up.sql", size: 175, mode: os.FileMode(420), modTime: time.Unix(1552658127, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xdf, 0x33, 0x53, 0xb0, 0xfd, 0xc5, 0x0, 0xfa, 0xe7, 0x89, 0x52, 0x83, 0x19, 0x82, 0x32, 0x67, 0x38, 0x63, 0xb6, 0x9b, 0xbb, 0x59, 0xd8, 0x75, 0x13, 0x41, 0x3e, 0xee, 0xa7, 0x34, 0xb8, 0xac}}
 	return a, nil
 }
