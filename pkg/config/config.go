@@ -8,8 +8,6 @@ type Config struct {
 	ServerAddr         string
 	ConnStr            string
 	EncryptionPassword string
-	HashidLength       int
-	HashidSalt         string
 	Verbose            bool
 	Domains            []string
 	DashboardURL       string

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	kitlog "github.com/go-kit/kit/log"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/thingful/simular"
@@ -36,8 +37,6 @@ func (s *PolicyStoreSuite) SetupTest() {
 
 	config := &config.Config{
 		ConnStr:            connStr,
-		HashidLength:       8,
-		HashidSalt:         "hashid-salt",
 		EncryptionPassword: "password",
 		Logger:             logger,
 		ClientTimeout:      1,
@@ -281,6 +280,11 @@ func (s *PolicyStoreSuite) TestInvalidCreateRequests() {
 }
 
 func (s *PolicyStoreSuite) TestInvalidDeleteRequest() {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		s.T().Fatalf("failed to create id: %s", err)
+	}
+
 	testcases := []struct {
 		label         string
 		request       *twirp.DeleteEntitlementPolicyRequest
@@ -297,31 +301,15 @@ func (s *PolicyStoreSuite) TestInvalidDeleteRequest() {
 		{
 			label: "missing token",
 			request: &twirp.DeleteEntitlementPolicyRequest{
-				CommunityId: "abc123",
+				CommunityId: id.String(),
 				Token:       "",
 			},
 			expectedError: "twirp error invalid_argument: token is required",
 		},
 		{
-			label: "invalid community_id",
-			request: &twirp.DeleteEntitlementPolicyRequest{
-				CommunityId: "abc123",
-				Token:       "foobar",
-			},
-			expectedError: "twirp error internal: failed to decode hashed id: mismatch between encode and decode: abc123 start xm14aAYw re-encoded. result: [39775]",
-		},
-		{
-			label: "invalid community_id (double hashid)",
-			request: &twirp.DeleteEntitlementPolicyRequest{
-				CommunityId: "Vbg3HEbX",
-				Token:       "foobar",
-			},
-			expectedError: "twirp error internal: unexpected hashed ID",
-		},
-		{
 			label: "missing resource",
 			request: &twirp.DeleteEntitlementPolicyRequest{
-				CommunityId: "xm14aAYw",
+				CommunityId: id.String(),
 				Token:       "foobar",
 			},
 			expectedError: "twirp error internal: no policies were deleted, either the policy id or token must be invalid",

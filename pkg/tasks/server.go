@@ -44,16 +44,6 @@ able to be supplied via an environment variable: $POLICYSTORE_EXAMPLE_FLAG`,
 			return errors.New("Must supply a database encryption password")
 		}
 
-		hashidLength := viper.GetInt("hashid-length")
-		if hashidLength == 0 {
-			return errors.New("Must specify a minimum hashid length greater than 0")
-		}
-
-		hashidSalt := viper.GetString("hashid-salt")
-		if hashidSalt == "" {
-			return errors.New("Must supply a hashid salt value")
-		}
-
 		dashboardURL := viper.GetString("dashboard-url")
 		if dashboardURL == "" {
 			return errors.New("Must supply a valid URL for the dashboard API")
@@ -68,8 +58,6 @@ able to be supplied via an environment variable: $POLICYSTORE_EXAMPLE_FLAG`,
 			ServerAddr:         addr,
 			ConnStr:            connStr,
 			EncryptionPassword: encryptionPassword,
-			HashidLength:       hashidLength,
-			HashidSalt:         hashidSalt,
 			Verbose:            viper.GetBool("verbose"),
 			Domains:            viper.GetStringSlice("domains"),
 			DashboardURL:       dashboardURL,
@@ -97,8 +85,6 @@ func init() {
 	serverCmd.Flags().StringP("database-url", "d", "", "URL at which Postgres is listening (e.g. postgres://user:password@host:5432/dbname?sslmode=enable)")
 	serverCmd.Flags().StringSlice("domains", []string{}, "comma separate list of domains for which we obtain TLS certificates")
 	serverCmd.Flags().String("encryption-password", "", "password used to encrypt secret tokens we write to the database")
-	serverCmd.Flags().IntP("hashid-length", "l", 8, "minimum length of generated id strings for policies")
-	serverCmd.Flags().String("hashid-salt", "", "salt value used when generating IDs for policies")
 	serverCmd.Flags().String("dashboard-url", "", "URL at which the dashboard API is listening")
 	serverCmd.Flags().Int("client-timeout", 10, "timeout in seconds for the http client")
 
@@ -106,8 +92,6 @@ func init() {
 	viper.BindPFlag("database-url", serverCmd.Flags().Lookup("database-url"))
 	viper.BindPFlag("domains", serverCmd.Flags().Lookup("domains"))
 	viper.BindPFlag("encryption-password", serverCmd.Flags().Lookup("encryption-password"))
-	viper.BindPFlag("hashid-length", serverCmd.Flags().Lookup("hashid-length"))
-	viper.BindPFlag("hashid-salt", serverCmd.Flags().Lookup("hashid-salt"))
 	viper.BindPFlag("dashboard-url", serverCmd.Flags().Lookup("dashboard-url"))
 	viper.BindPFlag("client-timeout", serverCmd.Flags().Lookup("client-timeout"))
 
