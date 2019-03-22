@@ -114,7 +114,7 @@ func (s *Server) Start() error {
 		return err
 	}
 
-	stopChan := make(chan os.Signal)
+	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt)
 
 	go func() {
