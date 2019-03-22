@@ -283,13 +283,6 @@ func (d *DB) Ping() error {
 	return nil
 }
 
-// certificate is an internal type used for reading/writing letsencrypt
-// certificates to the DB
-type certificate struct {
-	Key         string `db:"key"`
-	Certificate []byte `db:"certificate"`
-}
-
 // Get is our implementation of the autocert.Cache interface for reading
 // certificates from some underlying storage. Here we attempt to read
 // certificates to Postgres.

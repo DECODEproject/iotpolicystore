@@ -174,7 +174,7 @@ func validateOperation(operation *ps.Operation) error {
 			return twirp.InvalidArgumentError("operation", "BIN type must specify bins, and no interval")
 		}
 	case ps.Operation_MOVING_AVG:
-		if operation.Interval <= 0 || len(operation.Bins) > 0 {
+		if operation.Interval == 0 || len(operation.Bins) > 0 {
 			return twirp.InvalidArgumentError("operation", "MOVING_AVG type must specify a non-zero positive interval, and no bins")
 		}
 	default:
