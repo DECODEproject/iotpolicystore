@@ -8,6 +8,8 @@
 // sql/20190308154458_add_coconut_fields.up.sql (134B)
 // sql/20190315114713_add_uuid_column.down.sql (127B)
 // sql/20190315114713_add_uuid_column.up.sql (175B)
+// sql/20190401115011_add_descriptions.down.sql (48B)
+// sql/20190401115011_add_descriptions.up.sql (53B)
 
 package migrations
 
@@ -236,6 +238,46 @@ func _20190315114713_add_uuid_columnUpSql() (*asset, error) {
 	return a, nil
 }
 
+var __20190401115011_add_descriptionsDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x72\xf4\x09\x71\x0d\x52\x08\x71\x74\xf2\x71\x55\x28\xc8\xcf\xc9\x4c\xce\x4c\x2d\xe6\x52\x50\x70\x09\xf2\x0f\x50\x70\xf6\xf7\x09\xf5\xf5\x53\x48\x49\x2d\x4e\x2e\xca\x2c\x28\xc9\xcc\xcf\x2b\xb6\x06\x04\x00\x00\xff\xff\x2f\x06\x43\x8e\x30\x00\x00\x00")
+
+func _20190401115011_add_descriptionsDownSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__20190401115011_add_descriptionsDownSql,
+		"20190401115011_add_descriptions.down.sql",
+	)
+}
+
+func _20190401115011_add_descriptionsDownSql() (*asset, error) {
+	bytes, err := _20190401115011_add_descriptionsDownSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "20190401115011_add_descriptions.down.sql", size: 48, mode: os.FileMode(420), modTime: time.Unix(1554119673, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xc5, 0xd9, 0x4c, 0xb8, 0x4f, 0xea, 0x5, 0x52, 0xe7, 0x67, 0xd4, 0x13, 0x5a, 0x72, 0xef, 0xd3, 0x8e, 0x87, 0xbc, 0xba, 0x24, 0x86, 0xe, 0xfe, 0x4a, 0x38, 0x7a, 0x83, 0xed, 0x1f, 0xac, 0x94}}
+	return a, nil
+}
+
+var __20190401115011_add_descriptionsUpSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x72\xf4\x09\x71\x0d\x52\x08\x71\x74\xf2\x71\x55\x28\xc8\xcf\xc9\x4c\xce\x4c\x2d\xe6\x52\x50\x70\x74\x71\x51\x70\xf6\xf7\x09\xf5\xf5\x53\x48\x49\x2d\x4e\x2e\xca\x2c\x28\xc9\xcc\xcf\x2b\x56\xf0\x0a\xf6\xf7\x73\xb2\x06\x04\x00\x00\xff\xff\x7f\xc3\x96\x15\x35\x00\x00\x00")
+
+func _20190401115011_add_descriptionsUpSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__20190401115011_add_descriptionsUpSql,
+		"20190401115011_add_descriptions.up.sql",
+	)
+}
+
+func _20190401115011_add_descriptionsUpSql() (*asset, error) {
+	bytes, err := _20190401115011_add_descriptionsUpSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "20190401115011_add_descriptions.up.sql", size: 53, mode: os.FileMode(420), modTime: time.Unix(1554119641, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x57, 0xc8, 0xc8, 0xe8, 0xd6, 0xba, 0x4a, 0x67, 0x8d, 0xcd, 0xea, 0x4f, 0x0, 0x40, 0x17, 0xe, 0x42, 0x37, 0xcf, 0x32, 0x4e, 0xfc, 0xca, 0x2c, 0x27, 0x33, 0x34, 0x72, 0xa1, 0xcc, 0x4b, 0x20}}
+	return a, nil
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -342,6 +384,10 @@ var _bindata = map[string]func() (*asset, error){
 	"20190315114713_add_uuid_column.down.sql": _20190315114713_add_uuid_columnDownSql,
 
 	"20190315114713_add_uuid_column.up.sql": _20190315114713_add_uuid_columnUpSql,
+
+	"20190401115011_add_descriptions.down.sql": _20190401115011_add_descriptionsDownSql,
+
+	"20190401115011_add_descriptions.up.sql": _20190401115011_add_descriptionsUpSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -393,6 +439,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"20190308154458_add_coconut_fields.up.sql":     &bintree{_20190308154458_add_coconut_fieldsUpSql, map[string]*bintree{}},
 	"20190315114713_add_uuid_column.down.sql":      &bintree{_20190315114713_add_uuid_columnDownSql, map[string]*bintree{}},
 	"20190315114713_add_uuid_column.up.sql":        &bintree{_20190315114713_add_uuid_columnUpSql, map[string]*bintree{}},
+	"20190401115011_add_descriptions.down.sql":     &bintree{_20190401115011_add_descriptionsDownSql, map[string]*bintree{}},
+	"20190401115011_add_descriptions.up.sql":       &bintree{_20190401115011_add_descriptionsUpSql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory.
