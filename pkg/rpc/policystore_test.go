@@ -89,6 +89,9 @@ func (s *PolicyStoreSuite) TestRoundTrip() {
 		},
 		AuthorizableAttributeId:     "abc123",
 		CredentialIssuerEndpointUrl: "http://credential.com",
+		Descriptions: map[string]string{
+			"en": "a policy",
+		},
 	}
 
 	assert.NotNil(s.T(), req)
@@ -107,6 +110,7 @@ func (s *PolicyStoreSuite) TestRoundTrip() {
 	assert.Len(s.T(), policy.Operations, 1)
 	assert.Equal(s.T(), "abc123", policy.AuthorizableAttributeId)
 	assert.Equal(s.T(), "http://credential.com", policy.CredentialIssuerEndpointUrl)
+	assert.Equal(s.T(), map[string]string{"en": "a policy"}, policy.Descriptions)
 
 	operation := policy.Operations[0]
 	assert.Equal(s.T(), twirp.Operation_SHARE, operation.Action)
