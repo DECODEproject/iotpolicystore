@@ -111,6 +111,7 @@ func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.Cre
 		return nil, errors.Wrap(err, "failed to begin transaction")
 	}
 
+	// generate uuid for the policy
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create uuid")
@@ -130,27 +131,34 @@ func (d *DB) CreatePolicy(req *twirp.CreateEntitlementPolicyRequest) (*twirp.Cre
 	}
 
 	// now we have all the data to persist the policy
-	b, err := json.Marshal(req.Operations)
+	ops, err := json.Marshal(req.Operations)
 	if err != nil {
 		tx.Rollback()
 		return nil, errors.Wrap(err, "failed to marshal operations JSON")
 	}
 
+	descriptions, err := json.Marshal(req.Descriptions)
+	if err != nil {
+		tx.Rollback()
+		return nil, errors.Wrap(err, "failed to marshal descriptions JSON")
+	}
+
 	// note the use of postgres native encryption to encrypt the token.
 	query := `INSERT INTO policies
-    (public_key, label, token, operations, authorizable_attribute_id, credential_issuer_endpoint_url, uuid)
+    (public_key, label, token, operations, authorizable_attribute_id, credential_issuer_endpoint_url, uuid, descriptions)
 		VALUES (:public_key, :label, pgp_sym_encrypt(:token, :encryption_password), :operations,
-		  :authorizable_attribute_id, :credential_issuer_endpoint_url, :uuid)`
+		  :authorizable_attribute_id, :credential_issuer_endpoint_url, :uuid, :descriptions)`
 
 	mapArgs := map[string]interface{}{
 		"public_key":                     publicKey,
 		"label":                          req.Label,
 		"token":                          token,
 		"encryption_password":            d.encryptionPassword,
-		"operations":                     types.JSONText(b),
+		"operations":                     types.JSONText(ops),
 		"authorizable_attribute_id":      req.AuthorizableAttributeId,
 		"credential_issuer_endpoint_url": req.CredentialIssuerEndpointUrl,
 		"uuid":                           id.String(),
+		"descriptions":                   types.JSONText(descriptions),
 	}
 
 	query, args, err := tx.BindNamed(query, mapArgs)
@@ -220,12 +228,13 @@ func (d *DB) DeletePolicy(req *twirp.DeleteEntitlementPolicyRequest) error {
 
 // policy is an internal type used for pulling data back from the DB.
 type policy struct {
-	UUID                        string         `db:"uuid"`
-	Label                       string         `db:"label"`
-	PublicKey                   string         `db:"public_key"`
-	Operations                  types.JSONText `db:"operations"`
-	AuthorizableAttributeID     string         `db:"authorizable_attribute_id"`
-	CredentialIssuerEndpointURL string         `db:"credential_issuer_endpoint_url"`
+	UUID                        string             `db:"uuid"`
+	Label                       string             `db:"label"`
+	PublicKey                   string             `db:"public_key"`
+	Operations                  types.JSONText     `db:"operations"`
+	AuthorizableAttributeID     string             `db:"authorizable_attribute_id"`
+	CredentialIssuerEndpointURL string             `db:"credential_issuer_endpoint_url"`
+	Descriptions                types.NullJSONText `db:"descriptions"`
 }
 
 // ListPolicies returns a list of all PolicyResponse structs currently
@@ -234,7 +243,8 @@ type policy struct {
 // numbers of policies will be registered.
 func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, error) {
 	sql := `SELECT uuid, label, public_key, operations,
-		authorizable_attribute_id, credential_issuer_endpoint_url
+		authorizable_attribute_id, credential_issuer_endpoint_url,
+		descriptions
 		FROM policies ORDER BY label`
 
 	rows, err := d.DB.Queryx(sql)
@@ -258,6 +268,14 @@ func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, er
 			return nil, errors.Wrap(err, "failed to unmarshal operations JSON")
 		}
 
+		var descriptions map[string]string
+		if p.Descriptions.Valid {
+			err = json.Unmarshal(p.Descriptions.JSONText, &descriptions)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to unmarshal descriptions JSON")
+			}
+		}
+
 		policyResponse := &twirp.ListEntitlementPoliciesResponse_Policy{
 			CommunityId:                 p.UUID,
 			Label:                       p.Label,
@@ -265,6 +283,7 @@ func (d *DB) ListPolicies() ([]*twirp.ListEntitlementPoliciesResponse_Policy, er
 			Operations:                  operations,
 			AuthorizableAttributeId:     p.AuthorizableAttributeID,
 			CredentialIssuerEndpointUrl: p.CredentialIssuerEndpointURL,
+			Descriptions:                descriptions,
 		}
 
 		policies = append(policies, policyResponse)
