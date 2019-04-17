@@ -44,11 +44,12 @@ func init() {
 
 // Server is our custom server type.
 type Server struct {
-	srv     *http.Server
-	logger  kitlog.Logger
-	db      *postgres.DB
-	store   ps.PolicyStore
-	domains []string
+	srv          *http.Server
+	logger       kitlog.Logger
+	db           *postgres.DB
+	store        ps.PolicyStore
+	domains      []string
+	dashboardURL string
 }
 
 // Startable is an interface for a component that can be started.
@@ -98,11 +99,12 @@ func NewServer(config *config.Config) *Server {
 
 	// return the instantiated server
 	return &Server{
-		srv:     srv,
-		logger:  kitlog.With(config.Logger, "module", "http"),
-		db:      db,
-		store:   store,
-		domains: config.Domains,
+		srv:          srv,
+		logger:       kitlog.With(config.Logger, "module", "http"),
+		db:           db,
+		store:        store,
+		domains:      config.Domains,
+		dashboardURL: config.DashboardURL,
 	}
 }
 
@@ -123,6 +125,7 @@ func (s *Server) Start() error {
 			"addr", s.srv.Addr,
 			"twirpPrefix", policystore.PolicyStorePathPrefix,
 			"domains", strings.Join(s.domains, ","),
+			"dashboardURL", s.dashboardURL,
 		)
 
 		if s.isTLSEnabled() {
